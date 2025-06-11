@@ -1,0 +1,25 @@
+﻿
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using ProyectoDIARS.Models;
+
+namespace ProyectoDIARS.config;
+
+public class Estudiante_CursoConfig : IEntityTypeConfiguration<Estudiante_Curso>
+{
+    public void Configure(EntityTypeBuilder<Estudiante_Curso> builder)
+    {
+        builder.ToTable("Estudiante_Cursos");
+
+        builder.HasKey(a => a.IdEstudianteCurso);
+
+        builder.Property(a => a.EstudianteId)
+            .IsRequired();
+            
+        builder.Property(a => a.CursoId)
+            .IsRequired();
+        
+        builder.Property(a => a.FechaRegistro)
+            .IsRequired();
+    }
+}

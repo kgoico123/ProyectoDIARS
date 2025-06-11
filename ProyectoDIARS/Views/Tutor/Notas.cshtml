@@ -1,0 +1,24 @@
+﻿@model ProyectoDIARS.ViewModels.NotasViewModel
+@{
+    Layout = null;
+}
+@Html.Partial("_MenuLateral")
+<div class="content">
+    <div class="bienvenido">Bienvenido, @Model.NombrePadre</div>
+    <div class="notas-box">
+        <div class="notas-title">Notas del Estudiante: @Model.NombreEstudiante</div>
+        <table>
+            <tr>
+                <th>Curso</th>
+                <th>Nota</th>
+            </tr>
+            @foreach (var nota in Model.Notas)
+            {
+                <tr>
+                    <td>@nota.Curso</td>
+                    <td>@nota.Nota</td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>

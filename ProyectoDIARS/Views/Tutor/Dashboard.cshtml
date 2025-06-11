@@ -1,0 +1,195 @@
+﻿@{
+    ViewBag.Title = "Página de Inicio del Padre";
+    Layout = null; // o usa tu layout si prefieres
+}
+
+<style>
+    .sidebar {
+        width: 220px;
+        background: #2186eb;
+        color: white;
+        position: fixed;
+        height: 100vh;
+        left: 0;
+        top: 0;
+        padding-top: 20px;
+    }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar li {
+            margin: 14px 0;
+        }
+
+        .sidebar button {
+            width: 180px;
+            background: #2186eb;
+            border: none;
+            color: white;
+            padding: 10px 0;
+            border-radius: 4px;
+            margin-left: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+            .sidebar button.active, .sidebar button:hover {
+                background: #1861ac;
+            }
+
+    .content {
+        margin-left: 240px;
+        padding: 30px 40px;
+    }
+
+    .bienvenido {
+        background: #2186eb;
+        color: white;
+        font-size: 2rem;
+        text-align: center;
+        padding: 12px 0;
+        border-radius: 8px 8px 0 0;
+        margin-bottom: 24px;
+    }
+
+    .notas-box {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 9px #0002;
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 18px;
+    }
+
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+    }
+
+    th {
+        background: #f5f8ff;
+    }
+
+    .btn-danger {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 12px 28px;
+        border-radius: 6px;
+    }
+</style>
+
+<div class="sidebar">
+    <h2 style="margin-left:10px;">I.E MICAELA BASTIDAS</h2>
+    <ul>
+        <li><button id="btn-info" class="active" onclick="showSection('info')">Información del Estudiante</button></li>
+        <li><button id="btn-notas" onclick="showSection('notas')">Notas</button></li>
+        <li><button id="btn-comp" onclick="showSection('comp')">Comportamiento</button></li>
+        <li style="margin-top:32px;"><a class="btn-danger" href="@Url.Action("Login","Account")">Cerrar Sesión</a></li>
+    </ul>
+</div>
+
+<div class="content">
+    <div class="bienvenido">Bienvenido, Juan Pérez</div>
+
+    <!-- Información del Estudiante -->
+    <div id="section-info" class="notas-box">
+        <b>Nombre Completo del Estudiante:</b> Clara Martínez<br>
+        <b>Grado:</b> 5to de Primaria<br>
+        <b>Sección:</b> A<br>
+        <button class="btn-danger" style="margin-top:24px;">Cerrar sesión</button>
+    </div>
+
+    <!-- Notas -->
+    <div id="section-notas" class="notas-box" style="display:none;">
+        <div style="font-size:1.3rem;font-weight:bold;">Notas del Estudiante</div>
+        <table>
+            <tr>
+                <th>Curso</th>
+                <th>Desempeño</th>
+                <th>Docente</th>
+                <th>Recomendación</th>
+            </tr>
+            <tr>
+                <td>Matemáticas</td>
+                <td><span style="color:green;font-size:2rem;">●</span></td>
+                <td>Prof. María González</td>
+                <td>Muy bien en los resultados. Mantener el enfoque.</td>
+            </tr>
+            <tr>
+                <td>Lengua y Literatura</td>
+                <td><span style="color:orange;font-size:2rem;">●</span></td>
+                <td>Prof. Juan López</td>
+                <td>Debe mejorar la comprensión de los textos. Se recomienda leer más.</td>
+            </tr>
+            <tr>
+                <td>Ciencias Sociales</td>
+                <td><span style="color:red;font-size:2rem;">●</span></td>
+                <td>Prof. Marta Díaz</td>
+                <td>Necesita trabajar más en la participación en clase.</td>
+            </tr>
+        </table>
+        <button class="btn-danger" style="margin-top:24px;">Cerrar sesión</button>
+    </div>
+
+    <!-- Comportamiento -->
+    <div id="section-comp" class="notas-box" style="display:none;">
+        <div style="font-size:1.3rem;font-weight:bold;">Comportamiento del Estudiante</div>
+        <div style="background:#eaf4ff;padding:12px 18px;margin:18px 0;border-radius:7px;">
+            <b>Comentario del Tutor:</b><br>
+            Juan Carlos ha mostrado una mejora significativa en su comportamiento durante el semestre. Su participación en clase ha aumentado, pero aún necesita trabajar en la puntualidad.
+        </div>
+        <canvas id="graficoComportamiento" width="400" height="200"></canvas>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            var ctx = document.getElementById('graficoComportamiento').getContext('2d');
+            var myChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Peleas', 'Desorden', 'Otros'],
+                    datasets: [{
+                        data: [25, 35, 40],
+                        backgroundColor: ['#e74c3c', '#ffbf00', '#27ae60']
+                    }]
+                }
+            });
+        </script>
+        <button class="btn-danger" style="margin-top:24px;">Cerrar sesión</button>
+    </div>
+</div>
+
+<script>
+    function showSection(section) {
+        // Oculta todas
+        document.getElementById('section-info').style.display = 'none';
+        document.getElementById('section-notas').style.display = 'none';
+        document.getElementById('section-comp').style.display = 'none';
+        // Quita clase active de todos los botones
+        document.getElementById('btn-info').classList.remove('active');
+        document.getElementById('btn-notas').classList.remove('active');
+        document.getElementById('btn-comp').classList.remove('active');
+        // Muestra la seleccionada y activa el botón
+        if(section === 'info') {
+            document.getElementById('section-info').style.display = '';
+            document.getElementById('btn-info').classList.add('active');
+        }
+        if(section === 'notas') {
+            document.getElementById('section-notas').style.display = '';
+            document.getElementById('btn-notas').classList.add('active');
+        }
+        if(section === 'comp') {
+            document.getElementById('section-comp').style.display = '';
+            document.getElementById('btn-comp').classList.add('active');
+        }
+    }
+</script>

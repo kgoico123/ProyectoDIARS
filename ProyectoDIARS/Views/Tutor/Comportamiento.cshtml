@@ -1,0 +1,31 @@
+﻿@model ProyectoDIARS.ViewModels.ComportamientoViewModel
+@{
+    Layout = null;
+}
+@Html.Partial("_MenuLateral")
+<div class="content">
+    <div class="bienvenido">Bienvenido, @Model.NombrePadre</div>
+    <div class="notas-box">
+        <div style="font-size:1.3rem;font-weight:bold;">Comportamiento del Estudiante</div>
+        <div style="background:#eaf4ff;padding:12px 18px;margin:18px 0;border-radius:7px;">
+            <b>Comentario del Tutor:</b> <br>
+            @Model.Comentario
+        </div>
+        <!-- Puedes usar Chart.js para el gráfico, aquí solo mostramos un ejemplo estático -->
+        <canvas id="graficoComportamiento" width="400" height="200"></canvas>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            var ctx = document.getElementById('graficoComportamiento').getContext('2d');
+            var myChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Peleas', 'Desorden', 'Otros'],
+                    datasets: [{
+                        data: [@Model.PorcentajePeleas, @Model.PorcentajeDesorden, @Model.PorcentajeOtros],
+                        backgroundColor: ['#e74c3c', '#ffbf00', '#27ae60']
+                    }]
+                }
+            });
+        </script>
+    </div>
+</div>
