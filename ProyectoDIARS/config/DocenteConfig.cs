@@ -12,12 +12,7 @@ public class DocenteConfig : IEntityTypeConfiguration<Docente>
 
         builder.HasKey(a => a.IdDocente);
 
-        builder.HasOne<ApplicationUser>()
-            .WithMany() 
-            .HasForeignKey(t => t.userId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.Property(a => a.userId)
+        builder.Property(a => a.UserId)
             .IsRequired();
     }
 }

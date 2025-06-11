@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ProyectoDIARS.Data;
+using ProyectoDIARS.seed;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,8 +17,25 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => options.Sign
 
 builder.Services.AddControllersWithViews();
 
+//datos iniciales
+builder.Services.AddScoped<IDbInitialize, DbInitialize>();
+
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    SeedData.Initialize(services);
+    try
+    {
+        var inicializador = services.GetRequiredService<IDbInitialize>();
+        inicializador.Initialize();
+    }
+    catch (Exception ex)
+    {
+        throw;
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -32,6 +50,7 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}");
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+// pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.Run();

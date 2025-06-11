@@ -13,7 +13,7 @@ namespace ProyectoDIARS.Models
 
         public int DocenteId { get; set; }
 
-        public ICollection<Docente> Docentes { get; set; }
+        public IEnumerable<Docente> Docentes { get; set; }
 
         public Estudiante_Curso estudiante_Curso { get; set; }
     }

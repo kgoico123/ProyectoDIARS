@@ -10,8 +10,5 @@ namespace ProyectoDIARS.Models
         public string? Dni { get; set; }
         public string? Apellido { get; set; }
 
-        public ICollection<Tutor> Tutores { get; set; }
-        public ICollection<Estudiante> Estudiantes { get; set; }
-        public ICollection<Docente> Docentes { get; set; }
     }
 }

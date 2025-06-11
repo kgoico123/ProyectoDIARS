@@ -12,16 +12,11 @@ public class EstudianteConfig : IEntityTypeConfiguration<Estudiante>
 
         builder.HasKey(a => a.IdEstudiante);
 
-        builder.HasOne<ApplicationUser>()
-            .WithMany()
-            .HasForeignKey(t => t.userId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.Property(a => a.Grado)
             .IsRequired()
             .HasMaxLength(50);
 
-        builder.Property(a => a.userId)
+        builder.Property(a => a.UserId)
             .IsRequired();
 
         builder.Property(a => a.TutorId)

@@ -12,13 +12,8 @@ public class TutorConfig : IEntityTypeConfiguration<Tutor>
 
         builder.HasKey(a => a.IdTutor);
 
-        builder.Property(a => a.userId)
+        builder.Property(a => a.UserId)
             .IsRequired();
-
-        builder.HasOne<ApplicationUser>()
-            .WithMany()
-            .HasForeignKey(t => t.userId)
-            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(a => a.Estudiantes)
             .WithOne(e => e.Tutor)

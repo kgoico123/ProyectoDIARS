@@ -6,10 +6,10 @@ namespace ProyectoDIARS.Models
     public class Tutor
     {
         public int IdTutor { get; set; }
-        public string userId { get; set; }
+        public string UserId { get; set; }
+        public virtual IdentityUser? user { get; set; }
         public string direccion { get; set; }
-        public IdentityUser? user { get; set; }
-        public ICollection<Estudiante>? Estudiantes { get; set; }
-        public ICollection<Notificacion>? Notificaciones { get; set; }
+        public IEnumerable<Estudiante>? Estudiantes { get; set; }
+        public IEnumerable<Notificacion>? Notificaciones { get; set; }
     }
 }
