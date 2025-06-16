@@ -8,13 +8,13 @@ namespace ProyectoDIARS.seed;
 
 public class DbInitialize : IDbInitialize
 {
-	private readonly AppDBContext _context;
-	private readonly UserManager<IdentityUser> _usertutor;
-	private readonly RoleManager<IdentityRole> _userRole;
-    public DbInitialize(AppDBContext context, RoleManager<IdentityRole> userRole, UserManager<IdentityUser> usertutor)
+    private readonly AppDBContext _context;
+    private readonly UserManager<ApplicationUser> _usertutor;
+    private readonly RoleManager<IdentityRole> _userRole;
+    public DbInitialize(AppDBContext context, RoleManager<IdentityRole> userRole, UserManager<ApplicationUser> usertutor)
     {
         _context = context;
-		_usertutor = usertutor;
+        _usertutor = usertutor;
         _userRole = userRole;
     }
     public void Initialize()

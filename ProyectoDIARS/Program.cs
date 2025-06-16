@@ -14,22 +14,30 @@ var connectionString = builder.Configuration.GetConnectionString("CadenaSQL");
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<AppDBContext>(options => options.UseSqlServer(connectionString));
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => { 
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
     options.SignIn.RequireConfirmedAccount = false;
     options.SignIn.RequireConfirmedEmail = false;
+
+    // Configuración personalizada para permitir contraseñas simples
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequiredLength = 3; // o lo que desees
+    options.Password.RequiredUniqueChars = 0;
 })
-    .AddDefaultUI()
     .AddEntityFrameworkStores<AppDBContext>()
+    .AddDefaultUI()
     .AddDefaultTokenProviders();
 
-//builder.Services.AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = false)
-//    .AddDefaultUI()
-//    .AddEntityFrameworkStores<AppDBContext>();
-
 builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
 
 //datos iniciales
 builder.Services.AddScoped<IDbInitialize, DbInitialize>();
+// Configurar Identity para usar ApplicationUser
+builder.Services.AddTransient<ApplicationUser>();
 
 var app = builder.Build();
 
@@ -63,5 +71,7 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 // pattern: "{controller=Account}/{action=Login}/{id?}");
+
+app.MapRazorPages();
 
 app.Run();
