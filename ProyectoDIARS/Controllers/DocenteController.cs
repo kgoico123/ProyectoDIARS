@@ -1,57 +1,121 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ProyectoDIARS.ViewModels;
+using ProyectoDIARS.Data;
+using ProyectoDIARS.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace ProyectoDIARS.Controllers
 {
     public class DocenteController : Controller
     {
-        // Simulación de datos
-        private static List<HorarioClaseVM> horarios = new()
-        {
-            new HorarioClaseVM { Id = 1, Grado = "5to de Primaria", Seccion = "A", HoraInicio = "08:00 AM", HoraFin = "09:30 AM" },
-            new HorarioClaseVM { Id = 2, Grado = "5to de Primaria", Seccion = "B", HoraInicio = "10:00 AM", HoraFin = "11:30 AM" },
-            new HorarioClaseVM { Id = 3, Grado = "6to de Secundaria", Seccion = "C", HoraInicio = "01:00 PM", HoraFin = "02:30 PM" }
-        };
+        private readonly AppDBContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        private static List<SeccionNotasVM> secciones = new()
+        public DocenteController(AppDBContext context, UserManager<ApplicationUser> userManager)
         {
-            new SeccionNotasVM {
-                Grado = "5to de Primaria", Seccion = "A",
-                Alumnos = new List<AlumnoNotaVM>
-                {
-                    new AlumnoNotaVM { Id = 1, Nombre = "Laura Pérez" },
-                    new AlumnoNotaVM { Id = 2, Nombre = "María Gómez" },
-                    new AlumnoNotaVM { Id = 3, Nombre = "Lucía Rodríguez" }
-                }
-            },
-            new SeccionNotasVM {
-                Grado = "5to de Primaria", Seccion = "B",
-                Alumnos = new List<AlumnoNotaVM>
-                {
-                    new AlumnoNotaVM { Id = 4, Nombre = "Ana López" },
-                    new AlumnoNotaVM { Id = 5, Nombre = "Paola Morales" }
-                }
-            }
-        };
+            _context = context;
+            _userManager = userManager;
+        }
 
-        public IActionResult Dashboard(int? horarioId = null, string? seccion = null)
+        public async Task<IActionResult> Dashboard(int? horarioId = null, string? seccion = null)
         {
-            var vm = new DocenteDashboardVM
+            var user = await _userManager.GetUserAsync(User);
+            var docente = await _context.Docentes
+                .Include(d => d.Curso)
+                    .ThenInclude(c => c.estudiante_Curso)
+                        .ThenInclude(ec => ec.Estudiante)
+                            .ThenInclude(e => e.user)
+                .FirstOrDefaultAsync(d => d.user.UserName == user.UserName);
+
+            Console.WriteLine($"Docente encontrado: {docente?.IdDocente}");
+            if (docente == null)
+                return Unauthorized();
+
+            // Usar el curso directamente desde el docente
+            var curso = docente.Curso;
+
+            // Obtener estudiantes por curso y sección
+            var secciones = new List<object>();
+            if (curso != null)
             {
-                NombreDocente = "Prof. Andrés Pérez",
-                Horarios = horarios,
-                HorarioSeleccionado = horarioId.HasValue ? horarios.FirstOrDefault(h => h.Id == horarioId) : null,
-                Secciones = secciones,
-                SeccionSeleccionada = !string.IsNullOrEmpty(seccion) ? secciones.FirstOrDefault(s => s.Seccion == seccion) : null
-            };
-            return View(vm);
+                secciones.Add(new
+                {
+                    Grado = curso.Nombre,
+                    Seccion = curso.aula,
+                    Alumnos = curso.estudiante_Curso.Select(ec => new
+                    {
+                        ec.Estudiante.IdEstudiante,
+                        ec.Estudiante.UserId,
+                        Nombre = ec.Estudiante.user.UserName
+                    }).ToList()
+                });
+            }
+            Console.WriteLine($"Secciones encontradas: {secciones.Count}");
+
+            ViewBag.Docente = docente;
+            ViewBag.Secciones = secciones ?? new List<object>();
+
+            return View();
         }
 
         [HttpPost]
-        public IActionResult SubirNotas(string seccion, List<AlumnoNotaVM> alumnos)
+        public IActionResult SubirNotas(string seccion, List<int> alumnosId, List<string> notas, List<string> comentarios)
         {
-            // Aquí deberías actualizar las notas en tu base de datos
-            // Simulación: nada
+            for (int i = 0; i < alumnosId.Count; i++)
+            {
+                var estudianteCurso = _context.Estudiantes_Cursos
+                    .FirstOrDefault(ec => ec.EstudianteId == alumnosId[i]);
+                if (estudianteCurso != null)
+                {
+                    // Obtener todas las calificaciones anteriores de este estudiante en este curso
+                    var calificacionesAnteriores = _context.Calificaciones
+                        .Where(c => c.estudiante_CursoId == estudianteCurso.IdEstudianteCurso)
+                        .OrderBy(c => c.FechaCalificacion)
+                        .ToList();
+
+                    // Solo permitir máximo 4 registros (bimestres)
+                    if (calificacionesAnteriores.Count >= 4)
+                        continue;
+
+                    // Convertir nota literal a numérica
+                    int nota = 0;
+                    switch ((notas[i] ?? "").Trim().ToUpper())
+                    {
+                        case "AD":
+                            nota = 20;
+                            break;
+                        case "A":
+                            nota = 16;
+                            break;
+                        case "B":
+                            nota = 12;
+                            break;
+                        case "C":
+                            nota = 8;
+                            break;
+                        default:
+                            nota = 0;
+                            break;
+                    }
+
+                    // Calcular el nuevo promedio acumulado (máximo 20)
+                    var listaNotas = calificacionesAnteriores.Select(c => c.Puntaje).ToList();
+                    listaNotas.Add(nota);
+                    double promedio = listaNotas.Any() ? listaNotas.Average() : 0;
+                    if (promedio > 20) promedio = 20;
+
+                    var calificacion = new Calificacion
+                    {
+                        estudiante_CursoId = estudianteCurso.IdEstudianteCurso,
+                        Puntaje = nota,
+                        FechaCalificacion = DateTime.Now,
+                        promedioAcumulado = (int)Math.Round(promedio),
+                        Comentario = comentarios[i] ?? "Sin comentario"
+                    };
+                    _context.Calificaciones.Add(calificacion);
+                }
+            }
+            _context.SaveChanges();
             return RedirectToAction("Dashboard", new { seccion });
         }
     }

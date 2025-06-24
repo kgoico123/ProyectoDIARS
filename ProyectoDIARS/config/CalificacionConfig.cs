@@ -22,6 +22,10 @@ public class CalificacionConfig : IEntityTypeConfiguration<Calificacion>
         builder.Property(a => a.Puntaje)
             .IsRequired();
 
+        builder.Property(a => a.Comentario)
+            .HasMaxLength(500)
+            .IsRequired();
+
         builder.Property(a => a.promedioAcumulado)
             .IsRequired();
     }

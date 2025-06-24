@@ -10,6 +10,7 @@ namespace ProyectoDIARS.Models
         public Estudiante_Curso Estudiante_Curso { get; set; }
         public DateTime FechaCalificacion { get; set; }
         public int Puntaje { get; set; }
+        public string Comentario { get; set; }
         public int promedioAcumulado { get; set; }
     }
 }

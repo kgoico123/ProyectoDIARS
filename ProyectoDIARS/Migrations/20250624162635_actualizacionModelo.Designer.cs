@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProyectoDIARS.Data;
 
@@ -11,9 +12,11 @@ using ProyectoDIARS.Data;
 namespace ProyectoDIARS.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    partial class AppDBContextModelSnapshot : ModelSnapshot
+    [Migration("20250624162635_actualizacionModelo")]
+    partial class actualizacionModelo
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -237,11 +240,6 @@ namespace ProyectoDIARS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCalificacion"));
 
-                    b.Property<string>("Comentario")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<DateTime>("FechaCalificacion")
                         .HasColumnType("datetime2");
 
@@ -385,7 +383,8 @@ namespace ProyectoDIARS.Migrations
 
                     b.HasKey("IdEstudianteCurso");
 
-                    b.HasIndex("CursoId");
+                    b.HasIndex("CursoId")
+                        .IsUnique();
 
                     b.HasIndex("EstudianteId");
 
@@ -580,8 +579,8 @@ namespace ProyectoDIARS.Migrations
             modelBuilder.Entity("ProyectoDIARS.Models.Estudiante_Curso", b =>
                 {
                     b.HasOne("ProyectoDIARS.Models.Curso", "Curso")
-                        .WithMany("estudiante_Curso")
-                        .HasForeignKey("CursoId")
+                        .WithOne("estudiante_Curso")
+                        .HasForeignKey("ProyectoDIARS.Models.Estudiante_Curso", "CursoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -622,7 +621,8 @@ namespace ProyectoDIARS.Migrations
                 {
                     b.Navigation("Docentes");
 
-                    b.Navigation("estudiante_Curso");
+                    b.Navigation("estudiante_Curso")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ProyectoDIARS.Models.Estudiante", b =>

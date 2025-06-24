@@ -11,10 +11,8 @@ namespace ProyectoDIARS.Models
         public DateTime horario { get; set; }
         public string aula { get; set; }
 
-        public int DocenteId { get; set; }
-
         public IEnumerable<Docente> Docentes { get; set; }
 
-        public Estudiante_Curso estudiante_Curso { get; set; }
+        public IEnumerable<Estudiante_Curso> estudiante_Curso { get; set; }
     }
 }

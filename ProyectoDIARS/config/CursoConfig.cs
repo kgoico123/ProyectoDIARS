@@ -23,8 +23,6 @@ public class CursoConfig : IEntityTypeConfiguration<Curso>
         builder.Property(a => a.aula)
             .IsRequired()
             .HasMaxLength(50);
-        
-        builder.Property(a => a.DocenteId)
-            .IsRequired();
+
     }
 }
