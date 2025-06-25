@@ -7,7 +7,7 @@ namespace ProyectoDIARS.Models
     {
         public int IdEstudiante { get; set; }
         public string UserId { get; set; }
-        public virtual IdentityUser? user { get; set; }
+        public virtual ApplicationUser? user { get; set; }
         public int TutorId { get; set; }
         public Tutor Tutor { get; set; }
         public string Grado { get; set; }

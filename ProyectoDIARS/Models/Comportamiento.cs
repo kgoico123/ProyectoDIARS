@@ -6,5 +6,6 @@ public class Comportamiento
     public int estudiante_CursoId { get; set; }
     public Estudiante_Curso Estudiante_Curso { get; set; }
     public DateTime FechaRegistro { get; set; }
+    public string Calificacion { get; set; }
     public string Descripcion { get; set; }
 }

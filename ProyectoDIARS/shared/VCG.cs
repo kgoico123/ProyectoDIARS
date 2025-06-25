@@ -23,5 +23,6 @@ namespace ProyectoDIARS.shared
             public const string advertencia = "Advertencia";
             public const string info = "Informacion";
         }
+
     }
 }

@@ -1,0 +1,43 @@
+﻿@{
+    ViewData["Title"] = "Registrar Curso";
+}
+
+<h2 class="text-2xl font-bold mb-4 text-blue-700">Registrar Curso</h2>
+
+<form method="post" asp-action="RegisterCursoPost" class="space-y-4">
+    <div>
+        <label>Nombre del curso</label>
+        <input name="Nombre" class="w-full border rounded px-2 py-1" required />
+    </div>
+    <div>
+        <label>Aula</label>
+        <input name="Aula" class="w-full border rounded px-2 py-1" required />
+    </div>
+    <div>
+        <label>Horario</label>
+        <input name="Horario" type="datetime-local" class="w-full border rounded px-2 py-1" required />
+    </div>
+    <div>
+        <label>
+            <input type="checkbox" id="asignarDocenteCheck" onchange="toggleAsignarDocente()" />
+            ¿Asignar docente ahora?
+        </label>
+    </div>
+    <div id="asignarDocenteSection" style="display:none;">
+        <label>Seleccionar docente</label>
+        <select name="DocenteId" class="w-full border rounded px-2 py-1">
+            <option value="">Seleccione un docente...</option>
+            @* Cargar docentes desde el controlador *@
+        </select>
+    </div>
+    <button type="submit" class="w-full py-2 rounded bg-green-700 text-white font-bold mt-4">Registrar Curso</button>
+</form>
+
+@section Scripts {
+    <script>
+        function toggleAsignarDocente() {
+            var check = document.getElementById('asignarDocenteCheck').checked;
+            document.getElementById('asignarDocenteSection').style.display = check ? '' : 'none';
+        }
+    </script>
+}

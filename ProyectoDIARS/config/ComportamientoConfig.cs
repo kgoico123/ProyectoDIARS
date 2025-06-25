@@ -22,5 +22,12 @@ public class ComportamientoConfig : IEntityTypeConfiguration<Comportamiento>
         builder.Property(a => a.Descripcion)
             .IsRequired()
             .HasMaxLength(500);
+
+
+        builder.Property(a => a.Calificacion)
+            .IsRequired()
+            .HasMaxLength(500);
+
+
     }
 }

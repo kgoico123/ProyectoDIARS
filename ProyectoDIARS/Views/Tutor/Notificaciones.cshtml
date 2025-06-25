@@ -1,7 +1,41 @@
-﻿
-@{
+﻿@{
     ViewData["Title"] = "Notificaciones";
+    var estudiante = ViewBag.Estudiante as ProyectoDIARS.Models.Estudiante;
+    var notificaciones = ViewBag.Notificaciones as List<ProyectoDIARS.Models.Notificacion> ?? new
+    List<ProyectoDIARS.Models.Notificacion>();
 }
 
-<h1>Notificaciones</h1>
+<h2 class="text-xl font-bold mb-4 text-blue-700">Notificaciones de @estudiante?.user?.UserName</h2>
+@if (!notificaciones.Any())
+{
+    <div class="bg-yellow-100 text-yellow-800 rounded px-4 py-2 mt-4 shadow-inner">
+        No hay notificaciones para este estudiante.
+    </div>
+}
+else
+{
+    <table class="min-w-full text-sm text-left rounded-xl bg-gray-100 shadow-inner">
+        <thead class="bg-gray-200">
+            <tr>
+                <th class="px-4 py-2 border-b font-semibold text-gray-600">Fecha</th>
+                <th class="px-4 py-2 border-b font-semibold text-gray-600">Título</th>
+                <th class="px-4 py-2 border-b font-semibold text-gray-600">Mensaje</th>
+                <th class="px-4 py-2 border-b font-semibold text-gray-600">Leída</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var n in notificaciones)
+            {
+                <tr>
+                    <td class="px-4 py-2 border-b">@n.fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td class="px-4 py-2 border-b">@n.Titulo</td>
+                    <td class="px-4 py-2 border-b">@n.Mensaje</td>
+                    <td class="px-4 py-2 border-b">@(n.Leida ? "Sí" : "No")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
+
+                                                                                                                                                                                                                    

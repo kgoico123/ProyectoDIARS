@@ -1,7 +1,136 @@
-﻿
-@{
-    ViewData["Title"] = "Register";
+﻿@{
+    ViewData["Title"] = "Registro de Usuario";
+    var cursos = ViewBag.Cursos;
 }
 
-<h1>Register</h1>
+<h2 class="text-2xl font-bold mb-4 text-blue-700">Registro de Usuario</h2>
 
+<form method="post" asp-action="RegisterPost" class="space-y-4" id="registerForm">
+    <div>
+        <label class="font-semibold">Tipo de usuario</label>
+        <select id="userType" name="userType" class="w-full border rounded px-2 py-1">
+            <option value="">Seleccione...</option>
+            <option value="Tutor">Tutor</option>
+            <option value="Estudiante">Estudiante</option>
+            <option value="Docente">Docente</option>
+            <option value="Administrador">Administrador</option>
+        </select>
+    </div>
+
+    <!-- Campos comunes -->
+    <div>
+        <label>Nombre</label>
+        <input name="Nombre" class="w-full border rounded px-2 py-1" required />
+    </div>
+    <div>
+        <label>Apellido</label>
+        <input name="Apellido" class="w-full border rounded px-2 py-1" required />
+    </div>
+    <div>
+        <label>DNI</label>
+        <input name="Dni" class="w-full border rounded px-2 py-1" required />
+    </div>
+    <div>
+        <label>Email</label>
+        <input name="Email" type="email" class="w-full border rounded px-2 py-1" required />
+    </div>
+    <div>
+        <label>Teléfono</label>
+        <input name="PhoneNumber" class="w-full border rounded px-2 py-1" required />
+    </div>
+    <div>
+        <label>Contraseña</label>
+        <input name="Password" type="password" class="w-full border rounded px-2 py-1" required />
+    </div>
+
+    <!-- Sección Tutor: registrar hijo -->
+    <div id="tutorSection" style="display:none;">
+        <h3 class="font-bold mt-4">Registrar Hijo/a</h3>
+        <div>
+            <label>Nombre del hijo/a</label>
+            <input name="HijoNombre" class="w-full border rounded px-2 py-1" />
+        </div>
+        <div>
+            <label>Apellido del hijo/a</label>
+            <input name="HijoApellido" class="w-full border rounded px-2 py-1" />
+        </div>
+        <div>
+            <label>DNI del hijo/a</label>
+            <input name="HijoDni" class="w-full border rounded px-2 py-1" />
+        </div>
+        <div>
+            <label>Grado</label>
+            <input name="HijoGrado" class="w-full border rounded px-2 py-1" />
+        </div>
+    </div>
+
+    <!-- Sección Estudiante: buscar o registrar tutor -->
+    <div id="estudianteSection" style="display:none;">
+        <h3 class="font-bold mt-4">Tutor</h3>
+        <label>
+            <input type="radio" name="tutorOption" value="existente" checked onchange="toggleTutorFields()" />
+            Seleccionar tutor existente
+        </label>
+        <label>
+            <input type="radio" name="tutorOption" value="nuevo" onchange="toggleTutorFields()" /> Registrar nuevo tutor
+        </label>
+        <div id="buscarTutor">
+            <input type="text" name="BuscarTutor" placeholder="Buscar tutor por nombre..."
+                class="w-full border rounded px-2 py-1" />
+            <!-- Aquí puedes mostrar una lista de tutores filtrados con JS/AJAX -->
+        </div>
+        <div id="nuevoTutor" style="display:none;">
+            <input name="NuevoTutorNombre" placeholder="Nombre del tutor" class="w-full border rounded px-2 py-1" />
+            <input name="NuevoTutorApellido" placeholder="Apellido del tutor" class="w-full border rounded px-2 py-1" />
+            <input name="NuevoTutorDni" placeholder="DNI del tutor" class="w-full border rounded px-2 py-1" />
+            <input name="NuevoTutorTelefono" placeholder="Teléfono del tutor" class="w-full border rounded px-2 py-1" />
+        </div>
+    </div>
+
+    <!-- Sección Docente: asignar curso -->
+    <div id="docenteSection" style="display:none;">
+        <h3 class="font-bold mt-4">Curso</h3>
+        <label>Seleccionar curso</label>
+        <select name="CursoId" class="w-full border rounded px-2 py-1">
+            <option value="">Seleccione un curso...</option>
+            @foreach (var curso in cursos)
+            {
+                <option value="@curso.IdCurso">@curso.Nombre</option>
+            }
+            @* Aquí puedes cargar los cursos desde el controlador *@
+        </select>
+        <div>
+            <label>¿Registrar nuevo curso?</label>
+            <input type="checkbox" id="nuevoCursoCheck" onchange="toggleNuevoCurso()" />
+        </div>
+        <div id="nuevoCurso" style="display:none;">
+            <input name="NuevoCursoNombre" placeholder="Nombre del curso" class="w-full border rounded px-2 py-1" />
+            <input name="NuevoCursoAula" placeholder="Aula" class="w-full border rounded px-2 py-1" />
+            <input name="NuevoCursoHorario" placeholder="Horario" class="w-full border rounded px-2 py-1" />
+        </div>
+    </div>
+
+    <!-- Sección Administrador: solo datos básicos -->
+
+    <button type="submit" class="w-full py-2 rounded bg-green-700 text-white font-bold mt-4">Registrar</button>
+</form>
+
+@section Scripts {
+    <script>
+        document.getElementById('userType').addEventListener('change', function () {
+            document.getElementById('tutorSection').style.display = this.value === 'Tutor' ? '' : 'none';
+            document.getElementById('estudianteSection').style.display = this.value === 'Estudiante' ? '' : 'none';
+            document.getElementById('docenteSection').style.display = this.value === 'Docente' ? '' : 'none';
+        });
+
+        function toggleTutorFields() {
+            var isNuevo = document.querySelector('input[name="tutorOption"]:checked').value === 'nuevo';
+            document.getElementById('buscarTutor').style.display = isNuevo ? 'none' : '';
+            document.getElementById('nuevoTutor').style.display = isNuevo ? '' : 'none';
+        }
+        function toggleNuevoCurso() {
+            var check = document.getElementById('nuevoCursoCheck').checked;
+            document.getElementById('nuevoCurso').style.display = check ? '' : 'none';
+        }
+    </script>
+}

@@ -1,31 +1,83 @@
-﻿@model ProyectoDIARS.ViewModels.ComportamientoViewModel
-@{
-    Layout = null;
+﻿@{
+    ViewData["Title"] = "Conducta";
+    var estudiante = ViewBag.Estudiante as ProyectoDIARS.Models.Estudiante;
+    var conductas = ViewBag.Conductas as List<ProyectoDIARS.Models.Comportamiento> ?? new
+    List<ProyectoDIARS.Models.Comportamiento>();
+
+    // Contar las calificaciones por tipo
+    var totalAD = conductas.Count(c => c.Calificacion == "AD");
+    var totalA = conductas.Count(c => c.Calificacion == "A");
+    var totalB = conductas.Count(c => c.Calificacion == "B");
+    var totalC = conductas.Count(c => c.Calificacion == "C");
 }
-@Html.Partial("_MenuLateral")
-<div class="content">
-    <div class="bienvenido">Bienvenido, @Model.NombrePadre</div>
-    <div class="notas-box">
-        <div style="font-size:1.3rem;font-weight:bold;">Comportamiento del Estudiante</div>
-        <div style="background:#eaf4ff;padding:12px 18px;margin:18px 0;border-radius:7px;">
-            <b>Comentario del Tutor:</b> <br>
-            @Model.Comentario
-        </div>
-        <!-- Puedes usar Chart.js para el gráfico, aquí solo mostramos un ejemplo estático -->
-        <canvas id="graficoComportamiento" width="400" height="200"></canvas>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script>
-            var ctx = document.getElementById('graficoComportamiento').getContext('2d');
-            var myChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['Peleas', 'Desorden', 'Otros'],
-                    datasets: [{
-                        data: [@Model.PorcentajePeleas, @Model.PorcentajeDesorden, @Model.PorcentajeOtros],
-                        backgroundColor: ['#e74c3c', '#ffbf00', '#27ae60']
-                    }]
-                }
-            });
-        </script>
+
+<h2 class="text-xl font-bold mb-4 text-blue-700">Conductas de @estudiante?.user?.UserName</h2>
+
+@if (!conductas.Any())
+{
+    <div class="bg-yellow-100 text-yellow-800 rounded px-4 py-2 mt-4 shadow-inner">
+        No hay registros de conducta para este estudiante.
     </div>
-</div>
+}
+else
+{
+    <div class="flex flex-col md:flex-row gap-8">
+        <div class="w-full md:w-1/2 flex justify-center items-center">
+            <canvas id="conductaPieChart" style="width:300px; height:300px; max-width:300px; max-height:300px;"></canvas>
+        </div>
+        <div class="w-full md:w-1/2">
+            <table class="min-w-full text-sm text-left rounded-xl bg-gray-100 shadow-inner">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="px-4 py-2 border-b font-semibold text-gray-600">Fecha</th>
+                        <th class="px-4 py-2 border-b font-semibold text-gray-600">Calificación</th>
+                        <th class="px-4 py-2 border-b font-semibold text-gray-600">Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in conductas)
+                    {
+                        <tr>
+                            <td class="px-4 py-2 border-b">@c.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="px-4 py-2 border-b">@c.Calificacion</td>
+                            <td class="px-4 py-2 border-b">@c.Descripcion</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('conductaPieChart').getContext('2d');
+        const data = {
+            labels: ['AD', 'A', 'B', 'C'],
+            datasets: [{
+                data: [@totalAD, @totalA, @totalB, @totalC],
+                backgroundColor: [
+                    '#22c55e', // verde para AD
+                    '#4ade80', // verde claro para A
+                    '#fde047', // amarillo para B
+                    '#f87171'  // rojo para C
+                ]
+            }]
+        };
+        const config = {
+            type: 'pie',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        };
+        new Chart(ctx, config);
+    </script>
+}
+
