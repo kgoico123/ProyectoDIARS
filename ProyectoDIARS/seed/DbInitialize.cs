@@ -44,6 +44,7 @@ public class DbInitialize : IDbInitialize
             Email = "admin@dev.cs",
             UserName = "admin@dev.cs",
             PhoneNumber = "123456789",
+            Dni = "12345678A",
         };
 
         var estudiante = new ApplicationUser
@@ -51,6 +52,7 @@ public class DbInitialize : IDbInitialize
             Email = "estudiante@dev.cs",
             UserName = "estudiante@dev.cs",
             PhoneNumber = "123456789",
+            Dni = "87654321B",
         };
 
         var tutor = new ApplicationUser
@@ -58,6 +60,7 @@ public class DbInitialize : IDbInitialize
             Email = "tutor@dev.cs",
             UserName = "tutor@dev.cs",
             PhoneNumber = "123456789",
+            Dni = "11223344C",
         };
 
         var docente = new ApplicationUser
@@ -65,6 +68,7 @@ public class DbInitialize : IDbInitialize
             Email = "docente@dev.cs",
             UserName = "docente@dev.cs",
             PhoneNumber = "123456789",
+            Dni = "22334455D",
         };
 
         _usertutor.CreateAsync(admin, "Admin123*").GetAwaiter().GetResult();
