@@ -4,9 +4,12 @@ using ProyectoDIARS.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using ProyectoDIARS.shared;
+using ProyectoDIARS.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ProyectoDIARS.Controllers
 {
+    [Authorize(Roles = VCG.Role_Docente)]
     public class DocenteController : Controller
     {
         private readonly AppDBContext _context;
@@ -21,62 +24,76 @@ namespace ProyectoDIARS.Controllers
         public async Task<IActionResult> Dashboard()
         {
             var user = await _userManager.GetUserAsync(User);
-            var docente = await _context.Docentes
+            var docenteRes = await _context.Docentes
                 .Include(d => d.Curso)
                     .ThenInclude(c => c.estudiante_Curso)
                         .ThenInclude(ec => ec.Estudiante)
                 .FirstOrDefaultAsync(d => d.user.UserName == user.UserName);
 
-            ViewBag.Docente = docente;
-            ViewBag.Curso = docente?.Curso;
-            ViewBag.CantidadAlumnos = docente?.Curso?.estudiante_Curso?.Count() ?? 0;
+            DocenteDashboardVM Dashboard = new DocenteDashboardVM
+            {
+                docente = docenteRes,
+                curso = docenteRes?.Curso,
+                CantidadAlumnos = docenteRes?.Curso?.estudiante_Curso?.Count() ?? 0
+            };
 
-            return View();
+            return View(Dashboard);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Calificaciones(int? horarioId = null, string? seccion = null)
         {
             var user = await _userManager.GetUserAsync(User);
-            var docente = await _context.Docentes
+            var docenteRes = await _context.Docentes
                 .Include(d => d.Curso)
                     .ThenInclude(c => c.estudiante_Curso)
                         .ThenInclude(ec => ec.Estudiante)
                             .ThenInclude(e => e.user)
                 .FirstOrDefaultAsync(d => d.user.UserName == user.UserName);
 
-            Console.WriteLine($"Docente encontrado: {docente?.IdDocente}");
-            if (docente == null)
+            if (docenteRes == null)
                 return Unauthorized();
 
             // Usar el curso directamente desde el docente
-            var curso = docente.Curso;
+            var curso = docenteRes.Curso;
 
             // Obtener estudiantes por curso y sección
-            var secciones = new List<object>();
+            var seccionesRes = new List<Secciones>();
+            var alumnosCount = 0; // Variable para contar los alumnos
             if (curso != null)
             {
-                secciones.Add(new
+                var alumnos = curso.estudiante_Curso.Select(ec => new AlumnoCalificacionVM
+                {
+                    IdEstudiante = ec.Estudiante.IdEstudiante,
+                    UserId = ec.Estudiante.UserId,
+                    Nombre = ec.Estudiante.user.UserName
+                }).ToList();
+
+                alumnosCount = alumnos.Count; // Guardamos la cantidad de alumnos
+
+                seccionesRes.Add(new Secciones
                 {
                     Grado = curso.Nombre,
                     Seccion = curso.aula,
-                    Alumnos = curso.estudiante_Curso.Select(ec => new
-                    {
-                        ec.Estudiante.IdEstudiante,
-                        ec.Estudiante.UserId,
-                        Nombre = ec.Estudiante.user.UserName
-                    }).ToList()
+                    Alumnos = alumnos
                 });
             }
-            Console.WriteLine($"Secciones encontradas: {secciones.Count}");
 
-            ViewBag.Docente = docente;
-            ViewBag.Secciones = secciones ?? new List<object>();
+            DocenteCalificacionesVM responseVM = new DocenteCalificacionesVM
+            {
+                docente = docenteRes,
+                secciones = seccionesRes,
+                // Inicializamos las listas para el formulario
+                alumnosId = new List<int>(new int[alumnosCount]),
+                notas = new List<string>(new string[alumnosCount]),
+                comentarios = new List<string>(new string[alumnosCount])
+            };
 
-            return View();
+            return View(responseVM);
         }
 
         [HttpPost]
-        public async Task<IActionResult> SubirNotas(string seccion, List<int> alumnosId, List<string> notas, List<string> comentarios)
+        public async Task<IActionResult> Calificaciones(DocenteCalificacionesVM data)
         {
             var user = await _userManager.GetUserAsync(User);
             var docente = await _context.Docentes
@@ -85,10 +102,10 @@ namespace ProyectoDIARS.Controllers
                         .ThenInclude(ec => ec.Estudiante)
                             .ThenInclude(e => e.user)
                 .FirstOrDefaultAsync(d => d.user.UserName == user.UserName);
-            for (int i = 0; i < alumnosId.Count; i++)
+            for (int i = 0; i < data.alumnosId.Count; i++)
             {
                 var estudianteCurso = _context.Estudiantes_Cursos
-                    .Where(ec => ec.EstudianteId == alumnosId[i] && ec.CursoId == docente.Curso.IdCurso)
+                    .Where(ec => ec.EstudianteId == data.alumnosId[i] && ec.CursoId == docente.Curso.IdCurso)
                     .ToList();
 
                 foreach (var ec in estudianteCurso)
@@ -110,7 +127,7 @@ namespace ProyectoDIARS.Controllers
 
                         // Convertir nota literal a numérica
                         int nota = 0;
-                        switch ((notas[i] ?? "").Trim().ToUpper())
+                        switch ((data.notas[i] ?? "").Trim().ToUpper())
                         {
                             case "AD":
                                 nota = 20;
@@ -141,7 +158,7 @@ namespace ProyectoDIARS.Controllers
                             Puntaje = nota,
                             FechaCalificacion = DateTime.Now,
                             promedioAcumulado = (int)Math.Round(promedio),
-                            Comentario = comentarios[i] ?? "Sin comentario"
+                            Comentario = data.comentarios[i] ?? "Sin comentario"
                         };
                         _context.Calificaciones.Add(calificacion);
                     }
@@ -149,9 +166,10 @@ namespace ProyectoDIARS.Controllers
 
             }
             _context.SaveChanges();
-            return RedirectToAction("Dashboard", new { seccion });
+            return RedirectToAction("Dashboard", new { data.seccion });
         }
 
+        [HttpGet]
         public async Task<IActionResult> Conducta()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -159,38 +177,49 @@ namespace ProyectoDIARS.Controllers
                 .Include(d => d.Curso)
                     .ThenInclude(c => c.estudiante_Curso)
                         .ThenInclude(ec => ec.Estudiante)
-                        .ThenInclude(u => u.user)
+                            .ThenInclude(e => e.user)
                 .FirstOrDefaultAsync(d => d.user.UserName == user.UserName);
 
-            ViewBag.Docente = docente;
-            ViewBag.Curso = docente?.Curso;
-            ViewBag.Estudiantes = docente?.Curso?.estudiante_Curso.Select(ec => ec.Estudiante).ToList() ?? new List<Estudiante>();
+            var estudiantes = docente?.Curso?.estudiante_Curso
+                                .Select(ec => ec.Estudiante)
+                                .ToList() ?? new List<Estudiante>();
 
-            return View();
+            DocenteConductaVM conductaVM = new DocenteConductaVM
+            {
+                Docente = docente,
+                Curso = docente?.Curso,
+                Estudiantes = estudiantes,
+                // Inicializar las listas para que coincidan con el número de estudiantes
+                AlumnosId = new List<int>(new int[estudiantes.Count]),
+                Conductas = new List<string>(new string[estudiantes.Count]),
+                Comentarios = new List<string>(new string[estudiantes.Count])
+            };
+
+            return View(conductaVM);
         }
 
         [HttpPost]
-        public IActionResult RegistrarConductas(List<int> alumnosId, List<string> conductas, List<string> comentarios)
+        public IActionResult Conducta(DocenteConductaVM dataVm)
         {
-            for (int i = 0; i < alumnosId.Count; i++)
+            for (int i = 0; i < dataVm.AlumnosId.Count; i++)
             {
-                var estudianteCurso = _context.Estudiantes_Cursos.FirstOrDefault(ec => ec.EstudianteId == alumnosId[i]);
-                if (estudianteCurso != null && !string.IsNullOrWhiteSpace(conductas[i]))
+                var estudianteCurso = _context.Estudiantes_Cursos.FirstOrDefault(ec => ec.EstudianteId == dataVm.AlumnosId[i]);
+                if (estudianteCurso != null && !string.IsNullOrWhiteSpace(dataVm.Conductas[i]))
                 {
                     var comportamiento = new Comportamiento
                     {
                         estudiante_CursoId = estudianteCurso.IdEstudianteCurso,
                         FechaRegistro = DateTime.Now,
-                        Calificacion = conductas[i],
-                        Descripcion = comentarios[i] ?? ""
+                        Calificacion = dataVm.Conductas[i],
+                        Descripcion = dataVm.Comentarios[i] ?? ""
                     };
                     _context.Comportamientos.Add(comportamiento);
 
                     // Si la conducta es "C" o "B", crear notificación al tutor
-                    if (conductas[i].Trim().ToUpper() == "C" || conductas[i].Trim().ToUpper() == "B")
+                    if (dataVm.Conductas[i].Trim().ToUpper() == "C" || dataVm.Conductas[i].Trim().ToUpper() == "B")
                     {
                         // Obtener el estudiante y su tutor
-                        var estudiante = _context.Estudiantes.Include(e => e.user).FirstOrDefault(e => e.IdEstudiante == alumnosId[i]);
+                        var estudiante = _context.Estudiantes.Include(e => e.user).FirstOrDefault(e => e.IdEstudiante == dataVm.AlumnosId[i]);
                         if (estudiante != null)
                         {
                             var notificacion = new Notificacion
@@ -198,7 +227,7 @@ namespace ProyectoDIARS.Controllers
                                 TutorId = estudiante.TutorId,
                                 fecha = DateTime.Now,
                                 Titulo = "Alerta de Conducta",
-                                Mensaje = $"Se ha registrado una conducta '{conductas[i]}' para el estudiante {estudiante.user?.UserName ?? "Desconocido"}. {comentarios[i]}",
+                                Mensaje = $"Se ha registrado una conducta '{dataVm.Conductas[i]}' para el estudiante {estudiante.user?.UserName ?? "Desconocido"}. {dataVm.Comentarios[i]}",
                                 Leida = false,
                                 Tipo = VCG.TipoNotificacion.advertencia
                             };

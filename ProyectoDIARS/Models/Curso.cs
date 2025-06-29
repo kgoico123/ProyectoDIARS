@@ -8,8 +8,11 @@ namespace ProyectoDIARS.Models
         public int IdCurso { get; set; }
 
         public string Nombre { get; set; }
-        public DateTime horario { get; set; }
+        // solo la hora
+        public TimeSpan HorarioInicio { get; set; }
+        public TimeSpan HorarioFin { get; set; }
         public string aula { get; set; }
+        public string Grado { get; set; }
 
         public IEnumerable<Docente> Docentes { get; set; }
 

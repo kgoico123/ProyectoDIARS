@@ -5,9 +5,13 @@ using System.Threading.Tasks;
 using System.Linq;
 using ProyectoDIARS.Data;
 using ProyectoDIARS.shared;
+using Microsoft.EntityFrameworkCore;
+using ProyectoDIARS.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ProyectoDIARS.Controllers
 {
+    [Authorize(Roles = VCG.Role_Admin)]
     public class AdministradorController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
@@ -24,168 +28,106 @@ namespace ProyectoDIARS.Controllers
         // GET: /Administrador/Register
         public IActionResult Register()
         {
-            ViewBag.Cursos = _context.Cursos.ToList();
-            return View();
+            NewRegisterTypeUserVM dataResponse = new NewRegisterTypeUserVM
+            {
+                cursos = _context.Cursos.ToList(),
+                tutores = _context.Tutores.Include(t => t.user).ToList()
+            };
+            return View(dataResponse);
         }
 
         // POST: /Administrador/Register
         [HttpPost]
-        public async Task<IActionResult> RegisterPost()
+        public async Task<IActionResult> Register(NewRegisterTypeUserVM userVM)
         {
-            var form = Request.Form;
-            string tipo = form["userType"].ToString() ?? string.Empty;
+            string tipo = userVM.tipo ?? string.Empty;
+            Console.WriteLine("======================================== tipo ========================================");
+            Console.WriteLine(tipo);
 
-            // Crear usuario base
-            var user = new ApplicationUser
-            {
-                UserName = form["Nombre"],
-                Email = form["Email"],
-                Dni = form["Dni"],
-                Apellido = form["Apellido"],
-                PhoneNumber = form["PhoneNumber"]
-            };
-            var result = await _userManager.CreateAsync(user, form["Password"]);
+
+            var result = await _userManager.CreateAsync(userVM.User, userVM.User.Dni);
             if (!result.Succeeded)
             {
+                Console.WriteLine("======================================== error ========================================");
+                // si hay errores los imprimimos
+                foreach (var error in result.Errors)
+                {
+                    Console.WriteLine(error.Description);
+                }
                 ViewBag.Error = string.Join(", ", result.Errors.Select(e => e.Description));
-                ViewBag.Cursos = _context.Cursos.ToList();
-                return View();
+                // Recargar los datos necesarios para la vista
+                userVM.cursos = _context.Cursos.ToList();
+                userVM.tutores = _context.Tutores.Include(t => t.user).ToList();
+                return View(userVM); // Pasar el modelo de vuelta a la vista
             }
 
-            if (tipo == "Tutor")
+            if (tipo == TypesRegister.Tutor)
             {
-                await _userManager.AddToRoleAsync(user, VCG.Role_Tutor);
+                await _userManager.AddToRoleAsync(userVM.User, VCG.Role_Tutor);
                 var tutor = new Tutor
                 {
-                    UserId = user.Id,
+                    UserId = userVM.User.Id,
                     direccion = "" // Puedes agregar campo en el formulario si lo necesitas
                 };
                 _context.Tutores.Add(tutor);
                 await _context.SaveChangesAsync();
 
                 // Registrar hijo/a si se ingresó
-                if (!string.IsNullOrEmpty(form["HijoNombre"]))
+                if (!string.IsNullOrEmpty(userVM.estudiante.user.UserName))
                 {
-                    var estudianteUser = new ApplicationUser
-                    {
-                        UserName = form["HijoNombre"],
-                        Apellido = form["HijoApellido"],
-                        Dni = form["HijoDni"]
-                    };
-                    await _userManager.CreateAsync(estudianteUser, "123456"); // Contraseña temporal
+                    await _userManager.CreateAsync(userVM.estudiante.user, userVM.estudiante.user.Dni); // Contraseña temporal
                     var estudiante = new Estudiante
                     {
-                        UserId = estudianteUser.Id,
+                        UserId = userVM.estudiante.user.Id,
                         TutorId = tutor.IdTutor,
-                        Grado = form["HijoGrado"]
+                        Grado = userVM.estudiante.Grado
                     };
                     _context.Estudiantes.Add(estudiante);
                     await _context.SaveChangesAsync();
-
-                    // Registrar estudiante en un curso (si lo seleccionas en el formulario)
-                    if (!string.IsNullOrEmpty(form["CursoId"]))
-                    {
-                        int cursoId = int.Parse(form["CursoId"]);
-                        var estudianteCurso = new Estudiante_Curso
-                        {
-                            EstudianteId = estudiante.IdEstudiante,
-                            CursoId = cursoId,
-                            FechaRegistro = DateTime.Now
-                        };
-                        _context.Estudiantes_Cursos.Add(estudianteCurso);
-                        await _context.SaveChangesAsync();
-                    }
                 }
             }
-            else if (tipo == "Estudiante")
+            else if (tipo == TypesRegister.Estudiante)
             {
-                await _userManager.AddToRoleAsync(user, VCG.Role_Estudiante);
-                int tutorId = 0;
-
-                if (form["tutorOption"] == "existente")
+                await _userManager.AddToRoleAsync(userVM.User, VCG.Role_Estudiante);
+                if (userVM.estudiante.TutorId <= 0 && !string.IsNullOrEmpty(userVM.tutor.user.UserName))
                 {
-                    // Buscar tutor por ID (mejor que por nombre)
-                    if (int.TryParse(form["TutorId"], out int id))
-                    {
-                        tutorId = id;
-                    }
-                }
-                else
-                {
-                    // Registrar nuevo tutor
-                    var tutorUser = new ApplicationUser
-                    {
-                        UserName = form["NuevoTutorNombre"],
-                        Apellido = form["NuevoTutorApellido"],
-                        Dni = form["NuevoTutorDni"],
-                        PhoneNumber = form["NuevoTutorTelefono"]
-                    };
-                    await _userManager.CreateAsync(tutorUser, "123456"); // Contraseña temporal
-                    var tutor = new Tutor
-                    {
-                        UserId = tutorUser.Id,
-                        direccion = ""
-                    };
-                    _context.Tutores.Add(tutor);
+                    await _userManager.CreateAsync(userVM.tutor.user, userVM.tutor.user.Dni); // Contraseña temporal
+                    Console.WriteLine("================================================================================");
+                    Console.WriteLine($"user id: {userVM.tutor.user.Id}");
+                    userVM.tutor.UserId = userVM.tutor.user.Id;
+                    _context.Tutores.Add(userVM.tutor);
                     await _context.SaveChangesAsync();
-                    tutorId = tutor.IdTutor;
+                    userVM.estudiante.TutorId = userVM.tutor.IdTutor;
                 }
+                Console.WriteLine($"id final del tutor: {userVM.estudiante.TutorId}");
+                userVM.estudiante.UserId = userVM.User.Id;
 
-                // Registrar estudiante
-                var estudiante = new Estudiante
-                {
-                    UserId = user.Id,
-                    TutorId = tutorId,
-                    Grado = form["Grado"]
-                };
-                _context.Estudiantes.Add(estudiante);
+                _context.Estudiantes.Add(userVM.estudiante);
                 await _context.SaveChangesAsync();
-
-                // Registrar estudiante en un curso (si lo seleccionas en el formulario)
-                if (!string.IsNullOrEmpty(form["CursoId"]))
-                {
-                    int cursoId = int.Parse(form["CursoId"]);
-                    var estudianteCurso = new Estudiante_Curso
-                    {
-                        EstudianteId = estudiante.IdEstudiante,
-                        CursoId = cursoId,
-                        FechaRegistro = DateTime.Now
-                    };
-                    _context.Estudiantes_Cursos.Add(estudianteCurso);
-                    await _context.SaveChangesAsync();
-                }
             }
-            else if (tipo == "Docente")
+            else if (tipo == TypesRegister.Docente)
             {
-                await _userManager.AddToRoleAsync(user, VCG.Role_Docente);
-                Curso? curso = null;
-                if (!string.IsNullOrEmpty(form["NuevoCursoNombre"]))
+                await _userManager.AddToRoleAsync(userVM.User, VCG.Role_Docente);
+                if (!string.IsNullOrEmpty(userVM.curso.Nombre))
                 {
-                    curso = new Curso
-                    {
-                        Nombre = form["NuevoCursoNombre"],
-                        aula = form["NuevoCursoAula"],
-                        horario = DateTime.Parse(form["NuevoCursoHorario"])
-                    };
-                    _context.Cursos.Add(curso);
+                    _context.Cursos.Add(userVM.curso);
                     await _context.SaveChangesAsync();
                 }
-                else if (!string.IsNullOrEmpty(form["CursoId"]))
+                else if (userVM.curso.IdCurso > 0)
                 {
-                    int cursoId = int.Parse(form["CursoId"]);
-                    curso = _context.Cursos.FirstOrDefault(c => c.IdCurso == cursoId);
+                    userVM.curso = _context.Cursos.FirstOrDefault(c => c.IdCurso == userVM.curso.IdCurso);
                 }
                 var docente = new Docente
                 {
-                    UserId = user.Id,
-                    Curso = curso
+                    UserId = userVM.User.Id,
+                    Curso = userVM.curso
                 };
                 _context.Docentes.Add(docente);
                 await _context.SaveChangesAsync();
             }
-            else if (tipo == "Administrador")
+            else if (tipo == TypesRegister.Administrador)
             {
-                await _userManager.AddToRoleAsync(user, "Administrador");
+                await _userManager.AddToRoleAsync(userVM.User, VCG.Role_Admin);
                 // Puedes agregar lógica adicional si tienes tabla Administrador
             }
 
@@ -196,32 +138,30 @@ namespace ProyectoDIARS.Controllers
         [HttpGet]
         public IActionResult RegisterCurso()
         {
-            ViewBag.Docentes = _context.Docentes.ToList();
-            return View();
+            NewCursoVM cursoVM = new NewCursoVM()
+            {
+                Curso = new Curso(),
+                DocenteId = 0,
+                Docentes = _context.Docentes.Include(u => u.user).ToList(),
+            };
+            return View(cursoVM);
         }
 
         // POST: /Administrador/RegisterCurso
         [HttpPost]
-        public async Task<IActionResult> RegisterCursoPost()
+        public async Task<IActionResult> RegisterCurso(NewCursoVM cursoVM)
         {
-            var form = Request.Form;
-            var curso = new Curso
-            {
-                Nombre = form["Nombre"],
-                aula = form["Aula"],
-                horario = DateTime.Parse(form["Horario"])
-            };
-            _context.Cursos.Add(curso);
+            _context.Cursos.Add(cursoVM.Curso);
             await _context.SaveChangesAsync();
 
             // Asignar docente si corresponde
-            if (!string.IsNullOrEmpty(form["DocenteId"]))
+            if (cursoVM.DocenteId > 0)
             {
-                int docenteId = int.Parse(form["DocenteId"]);
+                int docenteId = cursoVM.DocenteId;
                 var docente = _context.Docentes.FirstOrDefault(d => d.IdDocente == docenteId);
                 if (docente != null)
                 {
-                    docente.Curso = curso;
+                    docente.Curso = cursoVM.Curso;
                     _context.Docentes.Update(docente);
                     await _context.SaveChangesAsync();
                 }
@@ -230,9 +170,15 @@ namespace ProyectoDIARS.Controllers
             return RedirectToAction("Dashboard");
         }
 
-        public IActionResult Dashboard()
+        // ...existing code...
+        public async Task<IActionResult> Dashboard()
         {
+            ViewBag.User = await _userManager.GetUserAsync(User);
+            ViewBag.AlumnosCount = await _context.Estudiantes.CountAsync();
+            ViewBag.DocentesCount = await _context.Docentes.CountAsync();
+            ViewBag.CursosCount = await _context.Cursos.CountAsync();
             return View();
         }
+
     }
 }

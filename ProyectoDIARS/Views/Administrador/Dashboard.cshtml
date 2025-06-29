@@ -1,7 +1,71 @@
-﻿
-@{
+﻿@{
     ViewData["Title"] = "Dashboard";
 }
 
-<h1>Dashboard</h1>
+<div class="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8">
+    <div class="max-w-7xl mx-auto">
+
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Panel de Administración</h1>
+                <p class="mt-1 text-lg text-gray-600">¡Bienvenido de nuevo, @ViewBag.User.UserName!</p>
+            </div>
+            <div class="flex space-x-3 mt-4 sm:mt-0">
+                <a asp-action="Register" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold text-sm rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105">
+                    <i class="fas fa-user-plus -ml-1 mr-2"></i>
+                    Registrar Usuario
+                </a>
+                <a asp-action="RegisterCurso" class="inline-flex items-center px-4 py-2 bg-emerald-500 text-white font-semibold text-sm rounded-lg shadow-md hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-400 transition-transform transform hover:scale-105">
+                    <i class="fas fa-book-medical -ml-1 mr-2"></i>
+                    Registrar Curso
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+
+            <div class="bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl shadow-lg p-6 flex items-center justify-between transition-transform transform hover:-translate-y-2">
+                <div>
+                    <div class="text-5xl font-extrabold">@ViewBag.AlumnosCount</div>
+                    <div class="text-blue-100 uppercase font-semibold tracking-wider mt-1">Alumnos</div>
+                </div>
+                <div class="text-6xl opacity-30">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl shadow-lg p-6 flex items-center justify-between transition-transform transform hover:-translate-y-2">
+                <div>
+                    <div class="text-5xl font-extrabold">@ViewBag.DocentesCount</div>
+                    <div class="text-green-100 uppercase font-semibold tracking-wider mt-1">Docentes</div>
+                </div>
+                <div class="text-6xl opacity-30">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+            </div>
+
+            <!-- Tarjeta Cursos -->
+            <div class="bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-xl shadow-lg p-6 flex items-center justify-between transition-transform transform hover:-translate-y-2">
+                <div>
+                    <div class="text-5xl font-extrabold">@ViewBag.CursosCount</div>
+                    <div class="text-amber-100 uppercase font-semibold tracking-wider mt-1">Cursos</div>
+                </div>
+                <div class="text-6xl opacity-30">
+                    <i class="fas fa-book"></i>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
 

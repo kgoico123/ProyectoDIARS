@@ -300,6 +300,17 @@ namespace ProyectoDIARS.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IdCurso"));
 
+                    b.Property<string>("Grado")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<TimeSpan>("HorarioFin")
+                        .HasColumnType("time");
+
+                    b.Property<TimeSpan>("HorarioInicio")
+                        .HasColumnType("time");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -309,9 +320,6 @@ namespace ProyectoDIARS.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime>("horario")
-                        .HasColumnType("datetime2");
 
                     b.HasKey("IdCurso");
 
@@ -527,7 +535,7 @@ namespace ProyectoDIARS.Migrations
             modelBuilder.Entity("ProyectoDIARS.Models.Calificacion", b =>
                 {
                     b.HasOne("ProyectoDIARS.Models.Estudiante_Curso", "Estudiante_Curso")
-                        .WithMany()
+                        .WithMany("Calificaciones")
                         .HasForeignKey("estudiante_CursoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -552,7 +560,7 @@ namespace ProyectoDIARS.Migrations
                         .WithMany("Docentes")
                         .HasForeignKey("CursoIdCurso");
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "user")
+                    b.HasOne("ProyectoDIARS.Models.ApplicationUser", "user")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -571,7 +579,7 @@ namespace ProyectoDIARS.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "user")
+                    b.HasOne("ProyectoDIARS.Models.ApplicationUser", "user")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -614,7 +622,7 @@ namespace ProyectoDIARS.Migrations
 
             modelBuilder.Entity("ProyectoDIARS.Models.Tutor", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "user")
+                    b.HasOne("ProyectoDIARS.Models.ApplicationUser", "user")
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -633,6 +641,11 @@ namespace ProyectoDIARS.Migrations
             modelBuilder.Entity("ProyectoDIARS.Models.Estudiante", b =>
                 {
                     b.Navigation("Estudiante_Cursos");
+                });
+
+            modelBuilder.Entity("ProyectoDIARS.Models.Estudiante_Curso", b =>
+                {
+                    b.Navigation("Calificaciones");
                 });
 
             modelBuilder.Entity("ProyectoDIARS.Models.Tutor", b =>

@@ -9,4 +9,6 @@ public class Estudiante_Curso
     public int CursoId { get; set; }
     public Curso Curso { get; set; }
     public DateTime FechaRegistro { get; set; }
+
+    public IEnumerable<Calificacion>? Calificaciones { get; set; }
 }

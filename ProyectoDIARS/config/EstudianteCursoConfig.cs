@@ -15,11 +15,16 @@ public class Estudiante_CursoConfig : IEntityTypeConfiguration<Estudiante_Curso>
 
         builder.Property(a => a.EstudianteId)
             .IsRequired();
-            
+
         builder.Property(a => a.CursoId)
             .IsRequired();
-        
+
         builder.Property(a => a.FechaRegistro)
             .IsRequired();
+
+        builder.HasMany(a => a.Calificaciones)
+            .WithOne(e => e.Estudiante_Curso)
+            .HasForeignKey(e => e.estudiante_CursoId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

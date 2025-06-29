@@ -3,9 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using ProyectoDIARS.Data;
 using ProyectoDIARS.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using ProyectoDIARS.shared;
+using ProyectoDIARS.ViewModels;
 
 namespace ProyectoDIARS.Controllers
 {
+    [Authorize(Roles = VCG.Role_Tutor)]
     public class TutorController : Controller
     {
         private readonly AppDBContext _context;
@@ -26,9 +30,11 @@ namespace ProyectoDIARS.Controllers
                 .ThenInclude(e => e.user)
                 .FirstOrDefaultAsync(t => t.UserId == user.Id);
 
-            var estudiantes = tutor?.Estudiantes?.ToList() ?? new List<Estudiante>();
-            ViewBag.Estudiantes = estudiantes;
-            return View();
+            TutorDashboardVM estudiantes = new TutorDashboardVM
+            {
+                Estudiantes = tutor?.Estudiantes
+            };
+            return View(estudiantes);
         }
 
         // Notificaciones: muestra las notificaciones del estudiante seleccionado
@@ -40,13 +46,37 @@ namespace ProyectoDIARS.Controllers
                 .FirstOrDefaultAsync(e => e.IdEstudiante == estudianteId);
 
             var notificaciones = await _context.Notificaciones
-                .Where(n => n.TutorId == estudiante.TutorId)
+                .Where(n => n.TutorId == estudiante.TutorId && n.Tutor.Estudiantes.First().IdEstudiante == estudianteId)
                 .OrderByDescending(n => n.fecha)
                 .ToListAsync();
 
-            ViewBag.Estudiante = estudiante;
-            ViewBag.Notificaciones = notificaciones;
-            return View();
+            TutorNotificacionesVM responseVM = new TutorNotificacionesVM
+            {
+                Notificaciones = notificaciones,
+                Estudiante = estudiante
+            };
+            return View(responseVM);
+        }
+
+        public async Task<IActionResult> LeerNotificacion(int notificacionId)
+        {
+            var notificacion = await _context.Notificaciones.FirstOrDefaultAsync(n => n.IdNotificacion == notificacionId);
+
+            if (notificacion == null)
+            {
+                return NotFound(); // o redirecciona con un mensaje si prefieres
+            }
+            
+            if (!notificacion.Leida)
+            {
+                notificacion.Leida = true;
+                _context.Notificaciones.Update(notificacion);
+                await _context.SaveChangesAsync();
+            }
+
+            ViewBag.UrlAnterior = Request.Headers["Referer"].ToString();
+
+            return View(notificacion);
         }
 
         // Conducta: muestra las conductas del estudiante seleccionado
@@ -65,9 +95,12 @@ namespace ProyectoDIARS.Controllers
                 .OrderByDescending(c => c.FechaRegistro)
                 .ToListAsync();
 
-            ViewBag.Estudiante = estudiante;
-            ViewBag.Conductas = conductas;
-            return View();
+            TutorComportamientoVM responseVM = new TutorComportamientoVM
+            {
+                Estudiante = estudiante,
+                Conductas = conductas
+            };
+            return View(responseVM);
         }
 
         // Calificaciones: muestra las calificaciones del estudiante seleccionado
@@ -88,25 +121,29 @@ namespace ProyectoDIARS.Controllers
                 .OrderByDescending(c => c.FechaCalificacion)
                 .ToListAsync();
 
-            // Obtener el último promedio acumulado por curso
+
             var promediosPorCurso = calificaciones
                 .GroupBy(c => c.Estudiante_Curso?.Curso?.Nombre)
                 .Where(g => g.Key != null)
                 .Select(g =>
                 {
                     var ultima = g.OrderByDescending(x => x.FechaCalificacion).FirstOrDefault();
-                    return new
+                    return new TutorCalificacionesVM.PromedioCursoViewModel
                     {
-                        Curso = g.Key,
+                        Curso = g.Key!,
                         Promedio = ultima != null ? ultima.promedioAcumulado : 0
                     };
                 })
                 .ToList();
 
-            ViewBag.PromediosPorCurso = promediosPorCurso;
-            ViewBag.Estudiante = estudiante;
-            ViewBag.Calificaciones = calificaciones;
-            return View();
+            TutorCalificacionesVM responseVM = new TutorCalificacionesVM
+            {
+                PromediosPorCurso = promediosPorCurso,
+                Calificaciones = calificaciones,
+                Estudiante = estudiante
+            };
+            return View(responseVM);
         }
+
     }
 }

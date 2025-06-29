@@ -17,10 +17,17 @@ public class CursoConfig : IEntityTypeConfiguration<Curso>
             .IsRequired()
             .HasMaxLength(100);
 
-        builder.Property(a => a.horario)
+        builder.Property(a => a.HorarioInicio)
+            .IsRequired();
+
+        builder.Property(a => a.HorarioFin)
             .IsRequired();
 
         builder.Property(a => a.aula)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.Property(a => a.Grado)
             .IsRequired()
             .HasMaxLength(50);
 

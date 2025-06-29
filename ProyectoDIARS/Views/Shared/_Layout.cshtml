@@ -1,11 +1,15 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using ProyectoDIARS.Models
+@using ProyectoDIARS.shared
+@inject SignInManager<ApplicationUser> SignInManager
+<!DOCTYPE html>
 <html lang="es" class="h-[100vh]">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - ProyectoDIARS</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    @* <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" /> *@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ProyectoDIARS.styles.css" asp-append-version="true" />
     <script src="https://cdn.jsdelivr.net/npm/@@tailwindcss/browser@4"></script>
@@ -13,7 +17,7 @@
 
 <body class="min-h-[100vh] flex flex-col">
     <header>
-        <nav class="bg-white/90 shadow-lg h-[10vh] flex items-center px-6 border-b border-green-700">
+        <nav class="bg-white/90 shadow-lg min-h-[10vh] flex items-center px-6 border-b border-green-700 relative">
             <div class="w-full flex justify-between items-center">
                 <!-- Logo -->
                 <div class="flex items-center gap-3">
@@ -22,146 +26,63 @@
                     <span class="text-2xl font-bold text-green-800 tracking-wide ">I.E. MICAELA
                         BASTIDAS</span>
                 </div>
-                <!-- Navegación principal -->
-                <div class="hidden md:flex space-x-6 items-center">
-                    <a class="text-green-800 hover:text-red-700 font-semibold transition" asp-area=""
-                        asp-controller="Home" asp-action="Index">Inicio</a>
-                    <a class="text-green-800 hover:text-red-700 font-semibold transition" asp-area=""
-                        asp-controller="Home" asp-action="Privacy">Privacidad</a>
-                    <a class="text-green-800 hover:text-red-700 font-semibold transition" href="#">Noticias</a>
-                    <a class="text-green-800 hover:text-red-700 font-semibold transition" href="#">Eventos</a>
-                    <!-- Menú desplegable de opciones -->
-                    <div class="relative">
-                        <button id="btn-mas" type="button"
-                            class="flex items-center gap-1 text-green-800 hover:text-red-700 font-semibold transition focus:outline-none">
-                            Más
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    var ruta = User.IsInRole(VCG.Role_Admin) ? "/Administrador/Dashboard" : User.IsInRole(VCG.Role_Docente)
+                    ?
+                    "/Docente/Dashboard" : User.IsInRole(VCG.Role_Tutor) ? "/Tutor/Dashboard" : "/Estudiante/Dashboard";
+                    <div class="hidden md:flex space-x-6 items-center">
+                        <a class="text-green-800 hover:text-red-700 font-semibold transition" asp-area=""
+                            asp-controller="Home" asp-action="Index">Inicio</a>
+                        <a class="text-green-800 hover:text-red-700 font-semibold transition" asp-area=""
+                            asp-controller="Home" asp-action="Privacy">Privacidad</a>
+                        <a class="text-green-800 hover:text-red-700 font-semibold transition" href="#">Noticias</a>
+                        <a class="text-green-800 hover:text-red-700 font-semibold transition" href="@ruta">Dashboard</a>
+                        <form class="m-0" id="logoutForm"
+                            asp-area="Identity" asp-page="/Account/Logout"
+                            asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                            <button id="logout" type="submit" class="text-green-800 hover:text-red-700 font-semibold transition bg-transparent border-0 p-0">Cerrar Sesión</button>
+                        </form>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <button class="hidden md:block relative text-green-800 hover:text-yellow-500 focus:outline-none">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
+                            <span
+                                class="absolute -top-1 -right-1 bg-yellow-400 text-black text-xs rounded-full px-1">3</span>
                         </button>
-                        <div id="menu-mas"
-                            class="hidden absolute left-0 mt-2 w-40 bg-white rounded-xl shadow-lg py-2 z-50 border border-green-300">
-                            <a href="#"
-                                class="block px-4 py-2 text-green-800 hover:bg-yellow-100 hover:text-red-700">Galería</a>
-                            <a href="#"
-                                class="block px-4 py-2 text-green-800 hover:bg-yellow-100 hover:text-red-700">Contacto</a>
-                            <a href="#"
-                                class="block px-4 py-2 text-green-800 hover:bg-yellow-100 hover:text-red-700">Soporte</a>
+
+                        <div class="md:hidden">
+                            <button id="mobile-menu-button" class="text-green-800 hover:text-red-700 focus:outline-none">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                            </button>
                         </div>
                     </div>
-                </div>
-                <!-- Acciones rápidas -->
-                <div class="hidden md:flex items-center gap-4">
-                    <!-- Notificaciones -->
-                    <button class="relative text-green-800 hover:text-yellow-500 focus:outline-none">
-                        <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                        <span
-                            class="absolute -top-1 -right-1 bg-yellow-400 text-black text-xs rounded-full px-1">3</span>
-                    </button>
-                    <!-- Menú usuario -->
-                    <div class="relative">
-                        <button id="btn-usuario" type="button" class="flex items-center gap-2 focus:outline-none">
-                            <span class="text-green-800 font-semibold">Usuario</span>
-                            <svg class="w-4 h-4 text-green-800" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
-                        <div id="menu-usuario"
-                            class="hidden absolute right-0 mt-2 w-44 bg-white rounded-xl shadow-lg py-2 z-50 border border-green-300">
-                            <a href="#" class="block px-4 py-2 text-green-800 hover:bg-yellow-100 hover:text-red-700">Mi
-                                Perfil</a>
-                            <a href="#"
-                                class="block px-4 py-2 text-green-800 hover:bg-yellow-100 hover:text-red-700">Configuración</a>
-                            <a href="#"
-                                class="block px-4 py-2 text-green-800 hover:bg-yellow-100 hover:text-red-700">Cerrar
-                                sesión</a>
-
-                            <a href="/Docente/Calificaciones"
-                                class="block px-4 py-2 text-green-800 hover:bg-yellow-100 hover:text-red-700">Calificaciones</a>
-                            <a href="/Docente/Conducta"
-                                class="block px-4 py-2 text-green-800 hover:bg-yellow-100 hover:text-red-700">Conductas</a>
-                            <a href="/Tutor/Dashboard"
-                                class="block px-4 py-2 text-green-800 hover:bg-yellow-100 hover:text-red-700">tutor
-                                Dashboard</a>
-
-                            <a href="/Administrador/Register"
-                                class="block px-4 py-2 text-green-800 hover:bg-yellow-100 hover:text-red-700">Registrarse Ad</a>
-
-
-
-                            <a asp-area="Identity" asp-page="/Account/Login"
-                                class="block px-4 py-2 text-green-800 hover:bg-yellow-100 hover:text-red-700">Login</a>
-                            <a asp-area="Identity" asp-page="/Account/Register"
-                                class="block px-4 py-2 text-green-800 hover:bg-yellow-100 hover:text-red-700">Registrarse</a>
-                        </div>
-                    </div>
-                </div>
-                <!-- Botón móvil -->
-                <div class="md:hidden">
-                    <button id="mobile-menu-button" class="text-green-800 hover:text-red-700 focus:outline-none">
-                        <svg class="h-8 w-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
-                </div>
+                }
             </div>
-            <!-- Menú móvil -->
-            <div id="mobile-menu" class="md:hidden hidden px-4 pb-4">
-                <a class="block text-green-800 hover:text-red-700 font-semibold py-2" asp-area="" asp-controller="Home"
-                    asp-action="Index">Inicio</a>
-                <a class="block text-green-800 hover:text-red-700 font-semibold py-2" asp-area="" asp-controller="Home"
-                    asp-action="Privacy">Privacidad</a>
-                <a class="block text-green-800 hover:text-red-700 font-semibold py-2" href="#">Noticias</a>
-                <a class="block text-green-800 hover:text-red-700 font-semibold py-2" href="#">Eventos</a>
-                <a class="block text-green-800 hover:text-red-700 font-semibold py-2" href="#">Galería</a>
-                <a class="block text-green-800 hover:text-red-700 font-semibold py-2" href="#">Contacto</a>
-                <a class="block text-green-800 hover:text-red-700 font-semibold py-2" href="#">Soporte</a>
-                <a asp-area="Identity" asp-page="/Account/Login"
-                    class="block mt-2 px-4 py-2 rounded-xl bg-white/10 text-green-800 hover:bg-yellow-100 hover:text-red-700 font-semibold shadow transition">
-                    Iniciar sesión
-                </a>
-                <a asp-area="Identity" asp-page="/Account/Register"
-                    class="block mt-2 px-4 py-2 rounded-xl bg-gradient-to-r from-green-700 via-yellow-300 to-red-700 text-white font-semibold shadow hover:scale-105 transition">
-                    Registrarse
-                </a>
-        </nav>
-        <script>
-            // Script simple para mostrar/ocultar menú móvil y dropdowns
-            document.addEventListener('DOMContentLoaded', function () {
-                const btn = document.getElementById('mobile-menu-button');
-                const menu = document.getElementById('mobile-menu');
-                btn.addEventListener('click', () => {
-                    menu.classList.toggle('hidden');
-                });
 
-                // Dropdown "Más"
-                const btnMas = document.getElementById('btn-mas');
-                const menuMas = document.getElementById('menu-mas');
-                btnMas.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    menuMas.classList.toggle('hidden');
-                });
-                // Dropdown usuario
-                const btnUsuario = document.getElementById('btn-usuario');
-                const menuUsuario = document.getElementById('menu-usuario');
-                btnUsuario.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    menuUsuario.classList.toggle('hidden');
-                });
-                // Cerrar dropdowns al hacer click fuera
-                document.addEventListener('click', function () {
-                    menuMas.classList.add('hidden');
-                    menuUsuario.classList.add('hidden');
-                });
-                // Evitar que se cierren al hacer click dentro del menú
-                menuMas.addEventListener('click', function (e) { e.stopPropagation(); });
-                menuUsuario.addEventListener('click', function (e) { e.stopPropagation(); });
-            });
-        </script>
+            <!-- Menú Móvil -->
+            @if (SignInManager.IsSignedIn(User))
+            {
+                var ruta = User.IsInRole(VCG.Role_Admin) ? "/Administrador/Dashboard" : User.IsInRole(VCG.Role_Docente)
+                ?
+                "/Docente/Dashboard" : User.IsInRole(VCG.Role_Tutor) ? "/Tutor/Dashboard" : "/Estudiante/Dashboard";
+                <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full bg-white shadow-lg z-1000">
+                    <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 flex flex-col items-center">
+                        <a class="text-green-800 hover:text-red-700 font-semibold transition block px-3 py-2 rounded-md text-base" asp-area="" asp-controller="Home" asp-action="Index">Inicio</a>
+                        <a class="text-green-800 hover:text-red-700 font-semibold transition block px-3 py-2 rounded-md text-base" asp-area="" asp-controller="Home" asp-action="Privacy">Privacidad</a>
+                        <a class="text-green-800 hover:text-red-700 font-semibold transition block px-3 py-2 rounded-md text-base" href="#">Noticias</a>
+                        <a class="text-green-800 hover:text-red-700 font-semibold transition block px-3 py-2 rounded-md text-base" href="@ruta">Dashboard</a>
+                        <form class="w-full text-center" id="logoutFormMobile" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                            <button type="submit" class="text-green-800 hover:text-red-700 font-semibold transition w-full px-3 py-2">Cerrar Sesión</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </nav>
     </header>
 
     <div class="relative overflow-hidden min-h-[90vh]">
@@ -173,6 +94,21 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <script>
+        // Script para el menú móvil
+        document.addEventListener('DOMContentLoaded', function () {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function () {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 
