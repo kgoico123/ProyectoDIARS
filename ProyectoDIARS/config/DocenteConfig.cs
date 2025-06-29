@@ -14,5 +14,8 @@ public class DocenteConfig : IEntityTypeConfiguration<Docente>
 
         builder.Property(a => a.UserId)
             .IsRequired();
+
+        builder.Property(a => a.UserId)
+           .IsRequired(false);
     }
 }

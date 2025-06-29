@@ -31,5 +31,11 @@ public class CursoConfig : IEntityTypeConfiguration<Curso>
             .IsRequired()
             .HasMaxLength(50);
 
+        // hacemos la relacion con el docente pero cuando se elimina el curso no se elimina el docente solo se coloca a null el id
+        builder.HasMany(a => a.Docentes)
+            .WithOne(d => d.Curso)
+            .HasForeignKey(a => a.CursoId)
+            .OnDelete(DeleteBehavior.SetNull); // Cambiamos a SetNull para no eliminar el docente al eliminar el curso
+
     }
 }

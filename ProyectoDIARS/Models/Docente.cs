@@ -9,6 +9,7 @@ namespace ProyectoDIARS.Models
         public int IdDocente { get; set; }
         public string UserId { get; set; }
         public virtual ApplicationUser? user { get; set; }
+        public int? CursoId { get; set; }
         public Curso? Curso { get; set; }
        
     }

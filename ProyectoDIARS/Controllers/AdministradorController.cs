@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ProyectoDIARS.Models;
 using Microsoft.AspNetCore.Identity;
-using System.Threading.Tasks;
-using System.Linq;
 using ProyectoDIARS.Data;
 using ProyectoDIARS.shared;
 using Microsoft.EntityFrameworkCore;
@@ -72,7 +70,7 @@ namespace ProyectoDIARS.Controllers
                 _context.Tutores.Add(tutor);
                 await _context.SaveChangesAsync();
 
-                // Registrar hijo/a si se ingresó
+                // Registrar hija si se ingresó
                 if (!string.IsNullOrEmpty(userVM.estudiante.user.UserName))
                 {
                     await _userManager.CreateAsync(userVM.estudiante.user, userVM.estudiante.user.Dni); // Contraseña temporal
@@ -170,7 +168,6 @@ namespace ProyectoDIARS.Controllers
             return RedirectToAction("Dashboard");
         }
 
-        // ...existing code...
         public async Task<IActionResult> Dashboard()
         {
             ViewBag.User = await _userManager.GetUserAsync(User);
@@ -180,5 +177,121 @@ namespace ProyectoDIARS.Controllers
             return View();
         }
 
+        public async Task<IActionResult> Cursos()
+        {
+            var curso = await _context.Cursos
+                .Include(c => c.Docentes)
+                .ThenInclude(d => d.user)
+                .Include(c => c.estudiante_Curso)
+                .ToListAsync();
+            return View(curso);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EliminarCurso(int id)
+        {
+            var curso = await _context.Cursos
+                .Include(c => c.estudiante_Curso)
+                .Include(c => c.Docentes)
+                .ThenInclude(d => d.user)
+                .FirstOrDefaultAsync(c => c.IdCurso == id);
+
+            if (curso == null)
+            {
+                return Json(new { success = false, message = "Curso no encontrado." });
+            }
+
+            if (curso.estudiante_Curso?.Any() ?? false)
+            {
+                return Json(new { success = false, message = "No se puede eliminar el curso porque tiene estudiantes asignados." });
+            }
+
+            _context.Cursos.Remove(curso);
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Curso eliminado correctamente." });
+        }
+
+        public async Task<IActionResult> ActualizarCurso(int id)
+        {
+            var curso = await _context.Cursos
+                .Include(c => c.Docentes)
+                .ThenInclude(d => d.user)
+                .FirstOrDefaultAsync(c => c.IdCurso == id);
+
+            if (curso == null)
+            {
+                return NotFound();
+            }
+
+            // Crear el ViewModel para la vista
+            var cursoVM = new NewCursoVM
+            {
+                Curso = curso,
+                // Cargar todos los docentes para el dropdown de asignación
+                Docentes = await _context.Docentes
+                    .Where(d => d.CursoId == null)
+                    .Include(d => d.user)
+                    .ToListAsync()
+            };
+
+            return View(cursoVM);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ActualizarCurso(NewCursoVM cursoVM)
+        {
+            // Buscar el curso existente en la base de datos
+            var cursoExist = await _context.Cursos.FindAsync(cursoVM.Curso.IdCurso);
+            if (cursoExist == null)
+            {
+                return NotFound();
+            }
+
+            // Actualizar las propiedades del curso
+            cursoExist.Nombre = cursoVM.Curso.Nombre;
+            cursoExist.HorarioInicio = cursoVM.Curso.HorarioInicio;
+            cursoExist.HorarioFin = cursoVM.Curso.HorarioFin;
+            cursoExist.aula = cursoVM.Curso.aula;
+            cursoExist.Grado = cursoVM.Curso.Grado;
+
+            _context.Cursos.Update(cursoExist);
+
+            if (cursoVM.DocenteId > 0)
+            {
+                var docente = await _context.Docentes.FindAsync(cursoVM.DocenteId);
+                if (docente != null)
+                {
+                    docente.CursoId = cursoExist.IdCurso;
+                    _context.Docentes.Update(docente);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Cursos");
+        }
+
+
+        public async Task<IActionResult> Usuarios()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            return View(users);
+        }
+
+        public async Task<IActionResult> EliminarUser(int id)
+        {
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            ViewBag.Roles = roles;
+
+            return View(user);
+        }
     }
 }

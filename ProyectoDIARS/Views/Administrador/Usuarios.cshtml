@@ -1,0 +1,18 @@
+@model IEnumerable<ProyectoDIARS.Models.ApplicationUser>
+@{
+    ViewData["Title"] = "Usuarios";
+}
+
+<Div>
+    @foreach (var user in Model)
+    {
+        <div>
+            <span>@user.UserName</span>
+            <span>@user.Email</span>
+            <span>@user.PhoneNumber</span>
+            <span>@user.Apellido</span>
+            <span>@user.Dni</span>
+        </div>
+    }
+
+</Div>
