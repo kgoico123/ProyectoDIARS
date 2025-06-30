@@ -79,8 +79,11 @@
         </nav>
     </header>
 
-    <div class="relative overflow-hidden min-h-[90vh]">
-        <main role="main" class="max-h-[90vh] h-[90vh] min-h-[90vh] overflow-auto">
+    <div class="relative overflow-hidden min-h-[90vh]" style="background-image: url('/images/colegio.jpg'); background-size: cover; background-position: center;">
+        <!-- Capa de superposición para mejorar la legibilidad -->
+        <div class="absolute inset-0 bg-white/50 backdrop-blur-sm"></div>
+        
+        <main role="main" class="relative max-h-[90vh] h-[90vh] min-h-[90vh] overflow-auto">
             @RenderBody()
         </main>
     </div>

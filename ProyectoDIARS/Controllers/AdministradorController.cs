@@ -171,6 +171,7 @@ namespace ProyectoDIARS.Controllers
         public async Task<IActionResult> Dashboard()
         {
             ViewBag.User = await _userManager.GetUserAsync(User);
+            ViewBag.UsersCount = await _userManager.Users.CountAsync();
             ViewBag.AlumnosCount = await _context.Estudiantes.CountAsync();
             ViewBag.DocentesCount = await _context.Docentes.CountAsync();
             ViewBag.CursosCount = await _context.Cursos.CountAsync();
@@ -280,18 +281,156 @@ namespace ProyectoDIARS.Controllers
             return View(users);
         }
 
-        public async Task<IActionResult> EliminarUser(int id)
+        public async Task<IActionResult> DetalleUser(string id)
         {
-            var user = await _userManager.FindByIdAsync(id.ToString());
+            var user = await _userManager.FindByIdAsync(id);
             if (user == null)
             {
                 return NotFound();
             }
-
             var roles = await _userManager.GetRolesAsync(user);
-            ViewBag.Roles = roles;
 
-            return View(user);
+            UserDetailVM responseData = new UserDetailVM();
+
+            responseData.UserId = user.Id;
+            responseData.role = roles;
+
+            if (roles.Contains(VCG.Role_Tutor))
+            {
+                responseData.tutor = await _context.Tutores.Include(t => t.user)
+                                          .Include(t => t.Estudiantes)
+                                          .ThenInclude(e => e.user)
+                                          .FirstOrDefaultAsync(t => t.UserId == user.Id);
+
+            }
+            else if (roles.Contains(VCG.Role_Estudiante))
+            {
+                responseData.estudiante = await _context.Estudiantes
+                                                  .Include(e => e.user)
+                                               .Include(e => e.Tutor)
+                                               .ThenInclude(t => t.user)
+                                               .Include(e => e.Estudiante_Cursos)
+                                               .ThenInclude(ec => ec.Curso)
+                                               .ThenInclude(c => c.Docentes)
+                                               .ThenInclude(d => d.user)
+                                               .FirstOrDefaultAsync(e => e.UserId == user.Id);
+            }
+            else if (roles.Contains(VCG.Role_Docente))
+            {
+                responseData.docente = await _context.Docentes
+                                            .Include(d => d.user)
+                                            .Include(d => d.Curso)
+                                            .ThenInclude(c => c.estudiante_Curso)
+                                            .FirstOrDefaultAsync(d => d.UserId == user.Id);
+            }
+            else if (roles.Contains(VCG.Role_Admin))
+            {
+                responseData.Administrador = user;
+            }
+
+            return View(responseData);
         }
+
+        public async Task<IActionResult> EliminarUser(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            var roles = await _userManager.GetRolesAsync(user);
+
+            UserDetailVM responseData = new UserDetailVM();
+
+            responseData.UserId = user.Id;
+            responseData.role = roles;
+
+            if (roles.Contains(VCG.Role_Tutor))
+            {
+                responseData.tutor = await _context.Tutores.Include(t => t.user)
+                                          .Include(t => t.Estudiantes)
+                                          .ThenInclude(e => e.user)
+                                          .FirstOrDefaultAsync(t => t.UserId == user.Id);
+
+            }
+            else if (roles.Contains(VCG.Role_Estudiante))
+            {
+                responseData.estudiante = await _context.Estudiantes
+                                                  .Include(e => e.user)
+                                               .Include(e => e.Tutor)
+                                               .ThenInclude(t => t.user)
+                                               .Include(e => e.Estudiante_Cursos)
+                                               .ThenInclude(ec => ec.Curso)
+                                               .ThenInclude(c => c.Docentes)
+                                               .ThenInclude(d => d.user)
+                                               .FirstOrDefaultAsync(e => e.UserId == user.Id);
+            }
+            else if (roles.Contains(VCG.Role_Docente))
+            {
+                responseData.docente = await _context.Docentes
+                                            .Include(d => d.user)
+                                            .Include(d => d.Curso)
+                                            .ThenInclude(c => c.estudiante_Curso)
+                                            .FirstOrDefaultAsync(d => d.UserId == user.Id);
+            }
+            else if (roles.Contains(VCG.Role_Admin))
+            {
+                responseData.Administrador = user;
+            }
+
+            return View(responseData);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EliminarUser(UserDetailVM user)
+        {
+            if (string.IsNullOrEmpty(user.UserId))
+            {
+                return NotFound();
+            }
+
+            var usuario = await _userManager.FindByIdAsync(user.UserId);
+            if (usuario == null)
+            {
+                return NotFound();
+            }
+
+            var docente = await _context.Docentes.FirstOrDefaultAsync(d => d.UserId == user.UserId);
+            if (docente != null)
+            {
+                _context.Docentes.Remove(docente);
+            }
+
+            var estudiante = await _context.Estudiantes.FirstOrDefaultAsync(e => e.UserId == user.UserId);
+            if (estudiante != null)
+            {
+                _context.Estudiantes.Remove(estudiante);
+            }
+
+            var tutor = await _context.Tutores.FirstOrDefaultAsync(a => a.UserId == user.UserId);
+            if (tutor != null)
+            {
+                _context.Tutores.Remove(tutor);
+            }
+
+            // Guarda los cambios (eliminación de relaciones)
+            await _context.SaveChangesAsync();
+
+            // Ahora sí puedes eliminar el usuario
+            var resultado = await _userManager.DeleteAsync(usuario);
+
+            if (resultado.Succeeded)
+            {
+                return RedirectToAction("Usuarios");
+            }
+
+            foreach (var error in resultado.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.Description);
+            }
+
+            return View("DetalleUsuario", user);
+        }
+
     }
 }

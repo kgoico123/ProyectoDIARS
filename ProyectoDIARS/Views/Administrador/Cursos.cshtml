@@ -10,14 +10,25 @@
             <h1 class="text-3xl font-bold text-gray-800">Gestión de Cursos</h1>
             <p class="mt-1 text-gray-600">Administra los cursos, asigna grados y horarios.</p>
         </div>
-        <a asp-action="Create"
-            class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring focus:ring-indigo-300 disabled:opacity-25 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Crear Curso
-        </a>
+        <div class="flex items-center space-x-2 mt-4 sm:mt-0">
+            <a asp-action="Dashboard"
+                class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-25 transition ease-in-out duration-150">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-gray-400" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                Dashboard
+            </a>
+            <a asp-action="Create"
+                class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 active:bg-indigo-900 disabled:opacity-25 transition ease-in-out duration-150">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Crear Curso
+            </a>
+        </div>
     </div>
 
     <!-- Contenedor para Alertas Dinámicas -->
@@ -159,46 +170,46 @@
                             'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0].value
                         }
                     })
-                    .then(response => response.json()) // Convertir la respuesta a JSON
-                    .then(data => {
-                        // Usar nuestra nueva función para mostrar la alerta
-                        showAlert(data.message, data.success);
+                        .then(response => response.json()) // Convertir la respuesta a JSON
+                        .then data => {
+                            // Usar nuestra nueva función para mostrar la alerta
+                            showAlert(data.message, data.success);
 
-                        if (data.success) {
-                            rowToDelete.remove(); // Elimina la fila de la tabla si fue exitoso
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showAlert('Ocurrió un error al intentar eliminar el curso.', false);
-                    })
-                    .finally(() => {
-                        // Oculta la modal y resetea las variables
-                        deleteModal.classList.add('hidden');
-                        cursoIdToDelete = null;
-                        rowToDelete = null;
-                    });
-                }
+                            if (data.success) {
+                                rowToDelete.remove(); // Elimina la fila de la tabla si fue exitoso
+                            }
+                        })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showAlert('Ocurrió un error al intentar eliminar el curso.', false);
+                })
+                .finally(() => {
+                    // Oculta la modal y resetea las variables
+                    deleteModal.classList.add('hidden');
+                    cursoIdToDelete = null;
+                    rowToDelete = null;
+                });
+        }
+                });
+
+        // Función para mostrar alertas dinámicas (toasts)
+        function showAlert(message, isSuccess) {
+            const alertContainer = document.getElementById('alert-container');
+            const alertDiv = document.createElement('div');
+            const bgColor = isSuccess ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700';
+
+            alertDiv.className = `px-4 py-3 rounded relative border ${bgColor}`;
+            alertDiv.setAttribute('role', 'alert');
+            alertDiv.innerHTML = `<span class="block sm:inline">${message}</span>`;
+
+            alertContainer.appendChild(alertDiv);
+
+            // La alerta se elimina automáticamente después de 5 segundos
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
             });
-
-            // Función para mostrar alertas dinámicas (toasts)
-            function showAlert(message, isSuccess) {
-                const alertContainer = document.getElementById('alert-container');
-                const alertDiv = document.createElement('div');
-                const bgColor = isSuccess ? 'bg-green-100 border-green-400 text-green-700' : 'bg-red-100 border-red-400 text-red-700';
-                
-                alertDiv.className = `px-4 py-3 rounded relative border ${bgColor}`;
-                alertDiv.setAttribute('role', 'alert');
-                alertDiv.innerHTML = `<span class="block sm:inline">${message}</span>`;
-
-                alertContainer.appendChild(alertDiv);
-
-                // La alerta se elimina automáticamente después de 5 segundos
-                setTimeout(() => {
-                    alertDiv.remove();
-                }, 5000);
-            }
-        });
     </script>
 }
 
