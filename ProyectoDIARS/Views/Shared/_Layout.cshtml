@@ -1,0 +1,112 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using ProyectoDIARS.Models
+@using ProyectoDIARS.shared
+@inject SignInManager<ApplicationUser> SignInManager
+@{
+    string controller = User.IsInRole(VCG.Role_Admin) ? "Administrador" :
+                        User.IsInRole(VCG.Role_Docente) ? "Docente" :
+                        User.IsInRole(VCG.Role_Tutor) ? "Tutor" : "Estudiante";
+}
+<!DOCTYPE html>
+<html lang="es" class="h-[100vh]">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ProyectoDIARS</title>
+    @* <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" /> *@
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/ProyectoDIARS.styles.css" asp-append-version="true" />
+    <script src="https://cdn.jsdelivr.net/npm/@@tailwindcss/browser@4"></script>
+</head>
+
+<body class="min-h-[100vh] flex flex-col">
+    <header>
+        <nav class="bg-white/90 shadow-lg min-h-[10vh] flex items-center px-6 border-b border-green-700 relative">
+            <div class="w-full flex justify-between items-center">
+                <!-- Logo -->
+                <div class="flex items-center gap-3">
+                    <img class="w-12 h-12 rounded-full border-2 border-green-700 shadow" src="/images/logo.png"
+                        alt="Logo I.E. Micaela Bastidas" />
+                    <span class="text-2xl font-bold text-green-800 tracking-wide ">I.E. MICAELA
+                        BASTIDAS</span>
+                </div>
+                @if (SignInManager.IsSignedIn(User))
+                {
+                   
+                    <div class="hidden md:flex space-x-6 items-center">
+                        <a class="text-green-800 hover:text-red-700 font-semibold transition" asp-area=""
+                            asp-controller="Home" asp-action="Index">Inicio</a>
+                        <a class="text-green-800 hover:text-red-700 font-semibold transition" asp-area=""
+                            asp-controller="Home" asp-action="Privacy">Privacidad</a>
+                        <a asp-area="Identity" asp-page="/Account/Manage/Index" class="text-green-800 hover:text-red-700 font-semibold transition" >Perfil</a>
+                        <a class="text-green-800 hover:text-red-700 font-semibold transition" asp-controller="@controller" asp-action="Dashboard">Dashboard</a>
+                        <form class="m-0" id="logoutForm"
+                            asp-area="Identity" asp-page="/Account/Logout"
+                            asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                            <button id="logout" type="submit" class="text-green-800 hover:text-red-700 font-semibold transition bg-transparent border-0 p-0">Cerrar Sesión</button>
+                        </form>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="md:hidden">
+                            <button id="mobile-menu-button" class="text-green-800 hover:text-red-700 focus:outline-none">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Menú Móvil -->
+            @if (SignInManager.IsSignedIn(User))
+            {
+                var ruta = User.IsInRole(VCG.Role_Admin) ? "/Administrador/Dashboard" : User.IsInRole(VCG.Role_Docente)
+                ?
+                "/Docente/Dashboard" : User.IsInRole(VCG.Role_Tutor) ? "/Tutor/Dashboard" : "/Estudiante/Dashboard";
+                <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full bg-white shadow-lg z-1000">
+                    <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3 flex flex-col items-center">
+                        <a class="text-green-800 hover:text-red-700 font-semibold transition block px-3 py-2 rounded-md text-base" asp-area="" asp-controller="Home" asp-action="Index">Inicio</a>
+                        <a class="text-green-800 hover:text-red-700 font-semibold transition block px-3 py-2 rounded-md text-base" asp-area="" asp-controller="Home" asp-action="Privacy">Privacidad</a>
+                        <a class="text-green-800 hover:text-red-700 font-semibold transition block px-3 py-2 rounded-md text-base" href="#">Noticias</a>
+                        <a class="text-green-800 hover:text-red-700 font-semibold transition block px-3 py-2 rounded-md text-base" href="@ruta">Dashboard</a>
+                        <form class="w-full text-center" id="logoutFormMobile" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                            <button type="submit" class="text-green-800 hover:text-red-700 font-semibold transition w-full px-3 py-2">Cerrar Sesión</button>
+                        </form>
+                    </div>
+                </div>
+            }
+        </nav>
+    </header>
+
+    <div class="relative overflow-hidden min-h-[90vh]" style="background-image: url('/images/colegio.jpg'); background-size: cover; background-position: center;">
+        <!-- Capa de superposición para mejorar la legibilidad -->
+        <div class="absolute inset-0 bg-white/50 backdrop-blur-sm"></div>
+        
+        <main role="main" class="relative max-h-[90vh] h-[90vh] min-h-[90vh] overflow-auto">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <script>
+        // Script para el menú móvil
+        document.addEventListener('DOMContentLoaded', function () {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function () {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+
+</html>

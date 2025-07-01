@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>CS8981;CS0168;CS8604;CS1998;CS8602;CS8601;CS8618;CS0169;MVC1000;</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.17" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.17" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.17" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.17">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.17" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.17">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
+  </ItemGroup>
+
+</Project>
